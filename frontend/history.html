@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Medication History</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            font-family: Arial, sans-serif;
+
+            margin: 0;
+
+            background-color: #f4f6f8;
+
+            color: #222;
+
+        }
+
+
+        /* ------------------------------------------------
+           HEADER
+        ------------------------------------------------ */
+
+        header {
+
+            background-color: white;
+
+            padding: 22px 30px;
+
+            border-bottom: 1px solid #ddd;
+
+        }
+
+
+        header h1 {
+
+            margin: 0;
+
+            font-size: 26px;
+
+        }
+
+
+        .subtitle {
+
+            margin-top: 6px;
+
+            color: #666;
+
+        }
+
+
+        /* ------------------------------------------------
+           MAIN CONTAINER
+        ------------------------------------------------ */
+
+        .container {
+
+            max-width: 1000px;
+
+            margin: 25px auto;
+
+            padding: 0 20px;
+
+        }
+
+
+        /* ------------------------------------------------
+           SELECTION AREA
+        ------------------------------------------------ */
+
+        .selection {
+
+            background-color: white;
+
+            padding: 20px;
+
+            border-radius: 10px;
+
+            border: 1px solid #ddd;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .selection-row {
+
+            display: flex;
+
+            gap: 15px;
+
+            flex-wrap: wrap;
+
+        }
+
+
+        .selection-group {
+
+            flex: 1;
+
+            min-width: 250px;
+
+        }
+
+
+        label {
+
+            display: block;
+
+            font-weight: bold;
+
+            margin-bottom: 7px;
+
+        }
+
+
+        select {
+
+            width: 100%;
+
+            padding: 11px;
+
+            border: 1px solid #bbb;
+
+            border-radius: 6px;
+
+            font-size: 15px;
+
+            background-color: white;
+
+        }
+
+
+        /* ------------------------------------------------
+           MEDICATION INFORMATION
+        ------------------------------------------------ */
+
+        .medication-info {
+
+            background-color: white;
+
+            padding: 20px;
+
+            border-radius: 10px;
+
+            border: 1px solid #ddd;
+
+            margin-bottom: 20px;
+
+            display: none;
+
+        }
+
+
+        .medication-name {
+
+            font-size: 22px;
+
+            font-weight: bold;
+
+        }
+
+
+        .medication-details {
+
+            margin-top: 8px;
+
+            color: #555;
+
+            line-height: 1.6;
+
+        }
+
+
+        /* ------------------------------------------------
+           HISTORY TABLE
+        ------------------------------------------------ */
+
+        .history-container {
+
+            background-color: white;
+
+            border-radius: 10px;
+
+            border: 1px solid #ddd;
+
+            overflow-x: auto;
+
+            display: none;
+
+        }
+
+
+        table {
+
+            width: 100%;
+
+            border-collapse: collapse;
+
+        }
+
+
+        th {
+
+            text-align: left;
+
+            padding: 14px;
+
+            background-color: #f1f3f5;
+
+            font-size: 14px;
+
+        }
+
+
+        td {
+
+            padding: 14px;
+
+            border-top: 1px solid #eee;
+
+            font-size: 14px;
+
+        }
+
+
+        tr:hover {
+
+            background-color: #fafafa;
+
+        }
+
+
+        /* ------------------------------------------------
+           STATUS
+        ------------------------------------------------ */
+
+        .status {
+
+            display: inline-block;
+
+            padding: 6px 10px;
+
+            border-radius: 15px;
+
+            font-size: 12px;
+
+            font-weight: bold;
+
+        }
+
+
+        .administered {
+
+            background-color: #d4edda;
+
+            color: #155724;
+
+        }
+
+
+        .cancelled {
+
+            background-color: #f8d7da;
+
+            color: #721c24;
+
+        }
+
+
+        .pending {
+
+            background-color: #fff3cd;
+
+            color: #856404;
+
+        }
+
+
+        /* ------------------------------------------------
+           EMPTY / LOADING
+        ------------------------------------------------ */
+
+        .message {
+
+            background-color: white;
+
+            padding: 30px;
+
+            border-radius: 10px;
+
+            border: 1px solid #ddd;
+
+            text-align: center;
+
+            color: #666;
+
+        }
+
+
+        /* ------------------------------------------------
+           REMARKS
+        ------------------------------------------------ */
+
+        .remarks {
+
+            margin-top: 20px;
+
+            padding: 15px;
+
+            background-color: #f8f9fa;
+
+            border-radius: 7px;
+
+        }
+
+
+        /* ------------------------------------------------
+           MOBILE
+        ------------------------------------------------ */
+
+        @media (max-width: 600px) {
+
+            header {
+
+                padding: 17px;
+
+            }
+
+
+            .container {
+
+                padding: 0 15px;
+
+            }
+
+
+            .selection-row {
+
+                flex-direction: column;
+
+            }
+
+
+            .selection-group {
+
+                min-width: 100%;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =================================================
+         HEADER
+    ================================================= -->
+
+    <header>
+
+        <h1>
+            Medication History
+        </h1>
+
+        <div class="subtitle">
+            View historical medication records by trainee and medication
+        </div>
+
+    </header>
+
+
+    <!-- =================================================
+         MAIN
+    ================================================= -->
+
+    <div class="container">
+
+
+        <!-- =================================================
+             SELECTION
+        ================================================= -->
+
+        <div class="selection">
+
+            <div class="selection-row">
+
+
+                <!-- TRAINEE -->
+
+                <div class="selection-group">
+
+                    <label for="trainee">
+
+                        Trainee
+
+                    </label>
+
+
+                    <select
+                        id="trainee"
+                        onchange="loadMedications()"
+                    >
+
+                        <option value="">
+
+                            Select trainee
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- MEDICATION -->
+
+                <div class="selection-group">
+
+                    <label for="medication">
+
+                        Medication
+
+                    </label>
+
+
+                    <select
+                        id="medication"
+                        onchange="loadHistory()"
+                        disabled
+                    >
+
+                        <option value="">
+
+                            Select medication
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             MEDICATION INFO
+        ================================================= -->
+
+        <div
+            class="medication-info"
+            id="medication-info"
+        >
+
+            <div
+                class="medication-name"
+                id="medication-name"
+            ></div>
+
+
+            <div
+                class="medication-details"
+                id="medication-details"
+            ></div>
+
+        </div>
+
+
+        <!-- =================================================
+             HISTORY
+        ================================================= -->
+
+        <div
+            class="history-container"
+            id="history-container"
+        >
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Date
+                        </th>
+
+                        <th>
+                            Expected
+                        </th>
+
+                        <th>
+                            Actual
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Given By
+                        </th>
+
+                        <th>
+                            Witnessed By
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody
+                    id="history-table"
+                >
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <div
+            class="message"
+            id="initial-message"
+        >
+
+            Select a trainee and medication
+            to view history.
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         JAVASCRIPT
+    ================================================= -->
+
+    <script>
+
+
+        const API_URL =
+            "http://127.0.0.1:8000";
+
+
+        // -------------------------------------------------
+        // LOAD TRAINEES
+        // -------------------------------------------------
+
+        async function loadTrainees() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${API_URL}/trainees`
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Failed to load trainees"
+                    );
+
+                }
+
+
+                const trainees =
+                    await response.json();
+
+
+                const dropdown =
+                    document.getElementById(
+                        "trainee"
+                    );
+
+
+                trainees.forEach(
+                    trainee => {
+
+                        const option =
+                            document.createElement(
+                                "option"
+                            );
+
+
+                        option.value =
+                            trainee.trainee_id;
+
+
+                        option.textContent =
+                            trainee.name;
+
+
+                        dropdown.appendChild(
+                            option
+                        );
+
+                    }
+                );
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert(
+                    "Unable to load trainees."
+                );
+
+            }
+
+        }
+
+
+        // -------------------------------------------------
+        // LOAD MEDICATIONS
+        // -------------------------------------------------
+
+        async function loadMedications() {
+
+            const traineeId =
+                document.getElementById(
+                    "trainee"
+                ).value;
+
+
+            const medicationDropdown =
+                document.getElementById(
+                    "medication"
+                );
+
+
+            // Reset medication dropdown
+
+            medicationDropdown.innerHTML = `
+                <option value="">
+                    Select medication
+                </option>
+            `;
+
+
+            medicationDropdown.disabled =
+                true;
+
+
+            hideHistory();
+
+
+            if (!traineeId) {
+
+                return;
+
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${API_URL}/trainees/${traineeId}/medications`
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Failed to load medications"
+                    );
+
+                }
+
+
+                const medications =
+                    await response.json();
+
+
+                medications.forEach(
+                    medication => {
+
+                        const option =
+                            document.createElement(
+                                "option"
+                            );
+
+
+                        option.value =
+                            medication.medication_id;
+
+
+                        option.textContent =
+                            medication.medication_name;
+
+
+                        medicationDropdown.appendChild(
+                            option
+                        );
+
+                    }
+                );
+
+
+                medicationDropdown.disabled =
+                    false;
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert(
+                    "Unable to load medications."
+                );
+
+            }
+
+        }
+
+
+        // -------------------------------------------------
+        // LOAD HISTORY
+        // -------------------------------------------------
+
+        async function loadHistory() {
+
+            const traineeId =
+                document.getElementById(
+                    "trainee"
+                ).value;
+
+
+            const medicationId =
+                document.getElementById(
+                    "medication"
+                ).value;
+
+
+            if (
+                !traineeId ||
+                !medicationId
+            ) {
+
+                hideHistory();
+
+                return;
+
+            }
+
+
+            try {
+
+                // -----------------------------------------
+                // GET MEDICATION INFORMATION
+                // -----------------------------------------
+
+                const medicationResponse =
+                    await fetch(
+                        `${API_URL}/trainees/${traineeId}/medications`
+                    );
+
+
+                const medications =
+                    await medicationResponse.json();
+
+
+                const medication =
+                    medications.find(
+                        med =>
+                            med.medication_id ===
+                            medicationId
+                    );
+
+
+                if (medication) {
+
+                    document.getElementById(
+                        "medication-name"
+                    ).textContent =
+                        medication.medication_name;
+
+
+                    document.getElementById(
+                        "medication-details"
+                    ).innerHTML = `
+
+                        Dosage:
+                        ${medication.dosage}
+
+                        <br>
+
+                        Frequency:
+                        ${medication.frequency}
+
+                        <br>
+
+                        Scheduled time:
+                        ${medication.scheduled_time}
+
+                        ${
+                            medication.instructions
+                            ? `<br>
+                               Instructions:
+                               ${medication.instructions}`
+                            : ""
+                        }
+
+                    `;
+
+
+                    document.getElementById(
+                        "medication-info"
+                    ).style.display =
+                        "block";
+
+                }
+
+
+                // -----------------------------------------
+                // GET HISTORY
+                // -----------------------------------------
+
+                const response =
+                    await fetch(
+                        `${API_URL}/history/${traineeId}/${medicationId}`
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Failed to load history"
+                    );
+
+                }
+
+
+                const history =
+                    await response.json();
+
+
+                const table =
+                    document.getElementById(
+                        "history-table"
+                    );
+
+
+                table.innerHTML = "";
+
+
+                document.getElementById(
+                    "initial-message"
+                ).style.display =
+                    "none";
+
+
+                document.getElementById(
+                    "history-container"
+                ).style.display =
+                    "block";
+
+
+                if (history.length === 0) {
+
+                    table.innerHTML = `
+
+                        <tr>
+
+                            <td
+                                colspan="6"
+                                style="text-align:center;"
+                            >
+
+                                No historical records found.
+
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                    return;
+
+                }
+
+
+                history.forEach(
+                    record => {
+
+                        const row =
+                            document.createElement(
+                                "tr"
+                            );
+
+
+                        let statusClass =
+                            "pending";
+
+
+                        let statusText =
+                            record.status;
+
+
+                        if (
+                            record.status ===
+                            "Administered"
+                        ) {
+
+                            statusClass =
+                                "administered";
+
+                            statusText =
+                                "✓ Administered";
+
+                        }
+
+
+                        if (
+                            record.status ===
+                            "Cancelled"
+                        ) {
+
+                            statusClass =
+                                "cancelled";
+
+                            statusText =
+                                "✕ Cancelled";
+
+                        }
+
+
+                        let actualTime =
+                            "-";
+
+
+                        if (
+                            record.actual_time
+                        ) {
+
+                            actualTime =
+                                new Date(
+                                    record.actual_time
+                                ).toLocaleTimeString();
+
+                        }
+
+
+                        row.innerHTML = `
+
+                            <td>
+                                ${record.date}
+                            </td>
+
+                            <td>
+                                ${record.scheduled_time}
+                            </td>
+
+                            <td>
+                                ${actualTime}
+                            </td>
+
+                            <td>
+
+                                <span
+                                    class="status ${statusClass}"
+                                >
+                                    ${statusText}
+                                </span>
+
+                            </td>
+
+                            <td>
+                                ${
+                                    record.given_by
+                                    || "-"
+                                }
+                            </td>
+
+                            <td>
+                                ${
+                                    record.witnessed_by
+                                    || "-"
+                                }
+                            </td>
+
+                        `;
+
+
+                        table.appendChild(
+                            row
+                        );
+
+                    }
+                );
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert(
+                    "Unable to load medication history."
+                );
+
+            }
+
+        }
+
+
+        // -------------------------------------------------
+        // HIDE HISTORY
+        // -------------------------------------------------
+
+        function hideHistory() {
+
+            document.getElementById(
+                "medication-info"
+            ).style.display =
+                "none";
+
+
+            document.getElementById(
+                "history-container"
+            ).style.display =
+                "none";
+
+
+            document.getElementById(
+                "initial-message"
+            ).style.display =
+                "block";
+
+        }
+
+
+        // -------------------------------------------------
+        // INITIALISE
+        // -------------------------------------------------
+
+        loadTrainees();
+
+    </script>
+
+
+</body>
+
+</html>

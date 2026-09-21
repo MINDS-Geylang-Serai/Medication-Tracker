@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+```
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Medication Management</title>
+
+
+<!-- ================================================= -->
+<!-- CSS -->
+<!-- ================================================= -->
+
+<style>
+
+    * {
+        box-sizing: border-box;
+    }
+
+
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f6f8;
+        color: #222;
+    }
+
+
+    /* =================================================
+       LOGIN
+       ================================================= */
+
+    .login-screen {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #f4f6f8;
+    }
+
+
+    .login-card {
+        width: 420px;
+        max-width: 90%;
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+
+    .login-card h1 {
+        margin-top: 0;
+        margin-bottom: 8px;
+    }
+
+
+    .login-subtitle {
+        color: #666;
+        margin-bottom: 30px;
+    }
+
+
+    label {
+        display: block;
+        font-weight: bold;
+        margin-top: 18px;
+        margin-bottom: 8px;
+    }
+
+
+    select,
+    textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 15px;
+        background: white;
+    }
+
+
+    textarea {
+        resize: vertical;
+    }
+
+
+    .login-button {
+        width: 100%;
+        margin-top: 25px;
+        padding: 13px;
+        border: none;
+        border-radius: 6px;
+        background: #1f6feb;
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+
+    .login-button:hover {
+        opacity: 0.9;
+    }
+
+
+    .error-message {
+        margin-top: 15px;
+        color: #c62828;
+    }
+
+
+    /* =================================================
+       MAIN APPLICATION
+       ================================================= */
+
+    .app-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 30px;
+    }
+
+
+    .header {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+
+    .header h1 {
+        margin: 0 0 8px 0;
+    }
+
+
+    #date {
+        color: #666;
+    }
+
+
+    /* =================================================
+       SUMMARY
+       ================================================= */
+
+    .summary {
+        display: grid;
+        grid-template-columns:
+            repeat(4, 1fr);
+
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+
+    .summary-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow:
+            0 2px 8px
+            rgba(0, 0, 0, 0.06);
+    }
+
+
+    .summary-label {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+
+    .summary-number {
+        font-size: 30px;
+        font-weight: bold;
+    }
+
+
+    /* =================================================
+       MEDICATION LIST
+       ================================================= */
+
+    main h2 {
+        margin-bottom: 20px;
+    }
+
+
+    #medications {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+
+    .medication-card {
+        background: white;
+        border-radius: 10px;
+        padding: 22px;
+        box-shadow:
+            0 2px 8px
+            rgba(0, 0, 0, 0.06);
+    }
+
+
+    .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+
+    .trainee {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+
+    .medication {
+        font-size: 17px;
+        color: #444;
+    }
+
+
+    .details {
+        margin-top: 15px;
+        line-height: 1.7;
+        color: #555;
+    }
+
+
+    .instructions {
+        margin-top: 8px;
+        padding: 10px;
+        background: #f7f7f7;
+        border-radius: 6px;
+    }
+
+
+    /* =================================================
+       STATUS
+       ================================================= */
+
+    .status {
+        padding: 7px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+
+    .status-administered {
+        background: #d4edda;
+        color: #155724;
+    }
+
+
+    .status-cancelled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+
+    /* =================================================
+       COMPLETED INFORMATION
+       ================================================= */
+
+    .completed-info {
+        margin-top: 18px;
+        padding: 15px;
+        background: #f7f7f7;
+        border-radius: 7px;
+        line-height: 1.7;
+    }
+
+
+    /* =================================================
+       ACTION BUTTONS
+       ================================================= */
+
+    .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+
+    button {
+        border: none;
+        border-radius: 6px;
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+
+    button:hover {
+        opacity: 0.9;
+    }
+
+
+    .administer {
+        background: #198754;
+        color: white;
+    }
+
+
+    .cancel {
+        background: #dc3545;
+        color: white;
+    }
+
+
+    /* =================================================
+       MESSAGE
+       ================================================= */
+
+    .message {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        text-align: center;
+        color: #666;
+    }
+
+
+    /* =================================================
+       MODALS
+       ================================================= */
+
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+
+        background:
+            rgba(0, 0, 0, 0.45);
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        padding: 20px;
+    }
+
+
+    .modal-content {
+        width: 500px;
+        max-width: 100%;
+
+        background: white;
+        border-radius: 10px;
+
+        box-shadow:
+            0 5px 25px
+            rgba(0, 0, 0, 0.2);
+    }
+
+
+    .modal-header {
+        padding: 20px 25px;
+        border-bottom: 1px solid #eee;
+    }
+
+
+    .modal-header h2 {
+        margin: 0;
+    }
+
+
+    .modal-body {
+        padding: 5px 25px 25px;
+    }
+
+
+    .modal-medication-name {
+        margin-top: 15px;
+        padding: 15px;
+        background: #f4f6f8;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+
+        padding: 18px 25px;
+
+        border-top:
+            1px solid #eee;
+    }
+
+
+    .modal-button {
+        padding: 11px 18px;
+    }
+
+
+    .secondary {
+        background: #e9ecef;
+        color: #333;
+    }
+
+
+    /* =================================================
+       MOBILE
+       ================================================= */
+
+    @media (max-width: 700px) {
+
+        .summary {
+            grid-template-columns:
+                repeat(2, 1fr);
+        }
+
+
+        .app-container {
+            padding: 15px;
+        }
+
+
+        .card-top {
+            flex-direction: column;
+        }
+
+
+        .actions {
+            flex-direction: column;
+        }
+
+
+        .actions button {
+            width: 100%;
+        }
+
+    }
+
+</style>
+```
+
+</head>
+
+<body>
+
+```
+<!-- ================================================= -->
+<!-- LOGIN SCREEN -->
+<!-- ================================================= -->
+
+<div id="loginScreen"
+     class="login-screen">
+
+    <div class="login-card">
+
+        <h1>
+            Medication Management
+        </h1>
+
+        <p class="login-subtitle">
+            Training Officer Login
+        </p>
+
+
+        <label for="staffSelect">
+            Select your name
+        </label>
+
+
+        <select id="staffSelect">
+
+            <option value="">
+                Loading staff...
+            </option>
+
+        </select>
+
+
+        <button
+            class="login-button"
+            onclick="login()"
+        >
+            Login
+        </button>
+
+
+        <div
+            id="loginError"
+            class="error-message"
+        ></div>
+
+    </div>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- MAIN APPLICATION -->
+<!-- ================================================= -->
+
+<div
+    id="appContent"
+    class="app-container"
+    style="display: none;"
+>
+
+
+    <!-- HEADER -->
+
+    <header class="header">
+
+        <h1>
+            Medication Management
+        </h1>
+
+        <div id="date"></div>
+
+    </header>
+
+
+    <!-- SUMMARY -->
+
+    <section class="summary">
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Total
+            </div>
+
+            <div
+                id="total-count"
+                class="summary-number"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Pending
+            </div>
+
+            <div
+                id="pending-count"
+                class="summary-number"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Administered
+            </div>
+
+            <div
+                id="administered-count"
+                class="summary-number"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Cancelled
+            </div>
+
+            <div
+                id="cancelled-count"
+                class="summary-number"
+            >
+                0
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- MEDICATIONS -->
+
+    <main>
+
+        <h2>
+            Today's Medications
+        </h2>
+
+
+        <div id="medications">
+
+            <div class="message">
+                Loading...
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- ADMINISTER MODAL -->
+<!-- ================================================= -->
+
+<div
+    id="administer-modal"
+    class="modal"
+    style="display: none;"
+>
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h2>
+                Administer Medication
+            </h2>
+
+        </div>
+
+
+        <div class="modal-body">
+
+            <div
+                id="administer-medication-name"
+                class="modal-medication-name"
+            ></div>
+
+
+            <label for="witnessed-by">
+                Witnessed by
+            </label>
+
+
+            <select id="witnessed-by">
+
+                <option value="">
+                    Loading staff...
+                </option>
+
+            </select>
+
+
+            <label for="administer-remarks">
+                Remarks
+            </label>
+
+
+            <textarea
+                id="administer-remarks"
+                rows="4"
+                placeholder="Optional remarks"
+            ></textarea>
+
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button
+                class="modal-button secondary"
+                onclick="closeAdministerModal()"
+            >
+                Back
+            </button>
+
+
+            <button
+                class="modal-button administer"
+                onclick="confirmAdminister()"
+            >
+                Confirm Administration
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- CANCEL MODAL -->
+<!-- ================================================= -->
+
+<div
+    id="cancel-modal"
+    class="modal"
+    style="display: none;"
+>
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h2>
+                Cancel Medication
+            </h2>
+
+        </div>
+
+
+        <div class="modal-body">
+
+            <div
+                id="cancel-medication-name"
+                class="modal-medication-name"
+            ></div>
+
+
+            <label for="cancellation-reason">
+                Reason for cancellation
+            </label>
+
+
+            <select
+                id="cancellation-reason"
+            >
+
+                <option value="">
+                    Select a reason
+                </option>
+
+                <option value="Absent">
+                    Trainee absent
+                </option>
+
+                <option value="Early dismissal">
+                    Early dismissal
+                </option>
+
+                <option value="Medication not available">
+                    Medication not available
+                </option>
+
+                <option value="Other">
+                    Other
+                </option>
+
+            </select>
+
+
+            <label for="cancel-remarks">
+                Remarks
+            </label>
+
+
+            <textarea
+                id="cancel-remarks"
+                rows="4"
+                placeholder="Optional remarks"
+            ></textarea>
+
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button
+                class="modal-button secondary"
+                onclick="closeCancelModal()"
+            >
+                Back
+            </button>
+
+
+            <button
+                class="modal-button cancel"
+                onclick="confirmCancel()"
+            >
+                Confirm Cancellation
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- JAVASCRIPT -->
+<!-- ================================================= -->
+
+<script>
+
+    const API_URL =
+        "http://127.0.0.1:8000";
+
+
+    let selectedLogId = null;
+
+    let selectedMedication = null;
+
+
+    // =================================================
+    // START APP
+    // =================================================
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        () => {
+
+            const dateElement =
+                document.getElementById(
+                    "date"
+                );
+
+
+            if (dateElement) {
+
+                dateElement.textContent =
+                    new Date().toLocaleDateString(
+                        undefined,
+                        {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric"
+                        }
+                    );
+
+            }
+
+
+            loadStaffForLogin();
+
+        }
+    );
+
+
+    // =================================================
+    // LOAD STAFF
+    // =================================================
+
+    async function loadStaff() {
+
+        try {
+
+            const response =
+                await fetch(
+                    `${API_URL}/staff`
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Failed to load staff."
+                );
+
+            }
+
+
+            const staff =
+                await response.json();
+
+
+            const dropdown =
+                document.getElementById(
+                    "witnessed-by"
+                );
+
+
+            if (!dropdown) {
+
+                return;
+
+            }
+
+
+            dropdown.innerHTML =
+                `<option value="">
+                    Select staff member
+                </option>`;
+
+
+            staff.forEach(
+                person => {
+
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    option.value =
+                        person.staff_id;
+
+
+                    option.textContent =
+                        `${person.name} (${person.role})`;
+
+
+                    dropdown.appendChild(
+                        option
+                    );
+
+                }
+            );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Unable to load staff members."
+            );
+
+        }
+
+    }
+
+
+    // =================================================
+    // LOAD MEDICATIONS
+    // =================================================
+
+    async function loadMedications() {
+
+        const container =
+            document.getElementById(
+                "medications"
+            );
+
+
+        if (!container) {
+
+            return;
+
+        }
+
+
+        container.innerHTML =
+            `<div class="message">
+                Loading...
+            </div>`;
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `${API_URL}/medications`
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Failed to load medications."
+                );
+
+            }
+
+
+            const medications =
+                await response.json();
+
+
+            window.currentMedications =
+                medications;
+
+
+            updateSummary(
+                medications
+            );
+
+
+            container.innerHTML = "";
+
+
+            if (
+                medications.length === 0
+            ) {
+
+                container.innerHTML =
+                    `<div class="message">
+                        No medications scheduled.
+                    </div>`;
+
+                return;
+
+            }
+
+
+            medications.forEach(
+                med => {
+
+                    const card =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    card.className =
+                        "medication-card";
+
+
+                    let statusClass =
+                        "status-pending";
+
+
+                    if (
+                        med.status ===
+                        "Administered"
+                    ) {
+
+                        statusClass =
+                            "status-administered";
+
+                    }
+
+
+                    if (
+                        med.status ===
+                        "Cancelled"
+                    ) {
+
+                        statusClass =
+                            "status-cancelled";
+
+                    }
+
+
+                    let statusText =
+                        med.status;
+
+
+                    if (
+                        med.status ===
+                        "Administered"
+                    ) {
+
+                        statusText =
+                            "✓ Administered";
+
+                    }
+
+
+                    if (
+                        med.status ===
+                        "Cancelled"
+                    ) {
+
+                        statusText =
+                            "✕ Cancelled";
+
+                    }
+
+
+                    let completedInfo = "";
+
+
+                    if (
+                        med.status ===
+                        "Administered"
+                    ) {
+
+                        const actualTime =
+                            med.actual_time
+                                ? new Date(
+                                    med.actual_time
+                                ).toLocaleTimeString()
+                                : "-";
+
+
+                        completedInfo = `
+
+                            <div class="completed-info">
+
+                                <strong>
+                                    Administration Record
+                                </strong>
+
+                                <br>
+
+                                Given by:
+                                ${
+                                    med.given_by_name
+                                    || "Unknown"
+                                }
+
+                                <br>
+
+                                Witnessed by:
+                                ${
+                                    med.witnessed_by_name
+                                    || "Unknown"
+                                }
+
+                                <br>
+
+                                Actual time:
+                                ${actualTime}
+
+                                ${
+                                    med.remarks
+                                    ? `<br>
+                                       Remarks:
+                                       ${med.remarks}`
+                                    : ""
+                                }
+
+                            </div>
+
+                        `;
+
+                    }
+
+
+                    if (
+                        med.status ===
+                        "Cancelled"
+                    ) {
+
+                        completedInfo = `
+
+                            <div class="completed-info">
+
+                                <strong>
+                                    Cancellation Record
+                                </strong>
+
+                                <br>
+
+                                Reason:
+                                ${
+                                    med.cancellation_reason
+                                    || "Unknown"
+                                }
+
+                                ${
+                                    med.remarks
+                                    ? `<br>
+                                       Remarks:
+                                       ${med.remarks}`
+                                    : ""
+                                }
+
+                            </div>
+
+                        `;
+
+                    }
+
+
+                    let actions = "";
+
+
+                    if (
+                        med.status ===
+                        "Pending"
+                    ) {
+
+                        actions = `
+
+                            <div class="actions">
+
+                                <button
+                                    class="administer"
+                                    onclick="openAdministerModal('${med.log_id}')"
+                                >
+                                    Administer
+                                </button>
+
+
+                                <button
+                                    class="cancel"
+                                    onclick="openCancelModal('${med.log_id}')"
+                                >
+                                    Cancel
+                                </button>
+
+                            </div>
+
+                        `;
+
+                    }
+
+
+                    card.innerHTML = `
+
+                        <div class="card-top">
+
+                            <div>
+
+                                <div class="trainee">
+                                    ${med.trainee}
+                                </div>
+
+                                <div class="medication">
+                                    ${med.medication}
+                                </div>
+
+                            </div>
+
+
+                            <div
+                                class="status ${statusClass}"
+                            >
+                                ${statusText}
+                            </div>
+
+                        </div>
+
+
+                        <div class="details">
+
+                            Dosage:
+                            ${med.dosage}
+
+                            <br>
+
+                            Scheduled:
+                            ${med.scheduled_time}
+
+                            ${
+                                med.instructions
+                                ? `<div class="instructions">
+                                     Instructions:
+                                     ${med.instructions}
+                                   </div>`
+                                : ""
+                            }
+
+                        </div>
+
+
+                        ${completedInfo}
+
+
+                        ${actions}
+
+                    `;
+
+
+                    container.appendChild(
+                        card
+                    );
+
+                }
+            );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+
+            container.innerHTML =
+                `<div class="message">
+
+                    Unable to load medications.
+
+                    <br><br>
+
+                    Make sure the FastAPI server
+                    is running.
+
+                </div>`;
+
+        }
+
+    }
+
+
+    // =================================================
+    // UPDATE SUMMARY
+    // =================================================
+
+    function updateSummary(
+        medications
+    ) {
+
+        const total =
+            medications.length;
+
+
+        const pending =
+            medications.filter(
+                med =>
+                    med.status ===
+                    "Pending"
+            ).length;
+
+
+        const administered =
+            medications.filter(
+                med =>
+                    med.status ===
+                    "Administered"
+            ).length;
+
+
+        const cancelled =
+            medications.filter(
+                med =>
+                    med.status ===
+                    "Cancelled"
+            ).length;
+
+
+        const totalElement =
+            document.getElementById(
+                "total-count"
+            );
+
+
+        const pendingElement =
+            document.getElementById(
+                "pending-count"
+            );
+
+
+        const administeredElement =
+            document.getElementById(
+                "administered-count"
+            );
+
+
+        const cancelledElement =
+            document.getElementById(
+                "cancelled-count"
+            );
+
+
+        if (totalElement) {
+
+            totalElement.textContent =
+                total;
+
+        }
+
+
+        if (pendingElement) {
+
+            pendingElement.textContent =
+                pending;
+
+        }
+
+
+        if (administeredElement) {
+
+            administeredElement.textContent =
+                administered;
+
+        }
+
+
+        if (cancelledElement) {
+
+            cancelledElement.textContent =
+                cancelled;
+
+        }
+
+    }
+
+
+    // =================================================
+    // ADMINISTER MODAL
+    // =================================================
+
+    function openAdministerModal(
+        logId
+    ) {
+
+        selectedLogId =
+            logId;
+
+
+        const medications =
+            window.currentMedications || [];
+
+
+        selectedMedication =
+            medications.find(
+                med =>
+                    med.log_id === logId
+            );
+
+
+        if (!selectedMedication) {
+
+            alert(
+                "Medication not found."
+            );
+
+            return;
+
+        }
+
+
+        document.getElementById(
+            "administer-medication-name"
+        ).textContent =
+            `${selectedMedication.trainee} — ${selectedMedication.medication}`;
+
+
+        document.getElementById(
+            "witnessed-by"
+        ).value = "";
+
+
+        document.getElementById(
+            "administer-remarks"
+        ).value = "";
+
+
+        document.getElementById(
+            "administer-modal"
+        ).style.display =
+            "flex";
+
+    }
+
+
+    function closeAdministerModal() {
+
+        document.getElementById(
+            "administer-modal"
+        ).style.display =
+            "none";
+
+    }
+
+
+    // =================================================
+    // CONFIRM ADMINISTER
+    // =================================================
+
+    async function confirmAdminister() {
+
+        const witnessedBy =
+            document.getElementById(
+                "witnessed-by"
+            ).value;
+
+
+        const remarks =
+            document.getElementById(
+                "administer-remarks"
+            ).value;
+
+
+        if (!witnessedBy) {
+
+            alert(
+                "Please select who witnessed the medication."
+            );
+
+            return;
+
+        }
+
+
+        const confirmed =
+            confirm(
+                "Confirm that this medication has been administered?"
+            );
+
+
+        if (!confirmed) {
+
+            return;
+
+        }
+
+
+        try {
+
+            const url =
+                `${API_URL}/medications/${selectedLogId}/administer`
+                + `?witnessed_by=${encodeURIComponent(
+                    witnessedBy
+                )}`
+                + `&remarks=${encodeURIComponent(
+                    remarks
+                )}`;
+
+
+            const response =
+                await fetch(
+                    url,
+                    {
+                        method: "PUT"
+                    }
+                );
+
+
+            const result =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                alert(
+                    result.error ||
+                    "Failed to administer medication."
+                );
+
+                return;
+
+            }
+
+
+            closeAdministerModal();
+
+
+            await loadMedications();
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Unable to connect to the server."
+            );
+
+        }
+
+    }
+
+
+    // =================================================
+    // CANCEL MODAL
+    // =================================================
+
+    function openCancelModal(
+        logId
+    ) {
+
+        selectedLogId =
+            logId;
+
+
+        const medications =
+            window.currentMedications || [];
+
+
+        selectedMedication =
+            medications.find(
+                med =>
+                    med.log_id === logId
+            );
+
+
+        if (!selectedMedication) {
+
+            alert(
+                "Medication not found."
+            );
+
+            return;
+
+        }
+
+
+        document.getElementById(
+            "cancel-medication-name"
+        ).textContent =
+            `${selectedMedication.trainee} — ${selectedMedication.medication}`;
+
+
+        document.getElementById(
+            "cancellation-reason"
+        ).value = "";
+
+
+        document.getElementById(
+            "cancel-remarks"
+        ).value = "";
+
+
+        document.getElementById(
+            "cancel-modal"
+        ).style.display =
+            "flex";
+
+    }
+
+
+    function closeCancelModal() {
+
+        document.getElementById(
+            "cancel-modal"
+        ).style.display =
+            "none";
+
+    }
+
+
+    // =================================================
+    // CONFIRM CANCEL
+    // =================================================
+
+    async function confirmCancel() {
+
+        const reason =
+            document.getElementById(
+                "cancellation-reason"
+            ).value;
+
+
+        const remarks =
+            document.getElementById(
+                "cancel-remarks"
+            ).value;
+
+
+        if (!reason) {
+
+            alert(
+                "Please select a cancellation reason."
+            );
+
+            return;
+
+        }
+
+
+        const confirmed =
+            confirm(
+                `Cancel this medication?\n\nReason: ${reason}`
+            );
+
+
+        if (!confirmed) {
+
+            return;
+
+        }
+
+
+        try {
+
+            const url =
+                `${API_URL}/medications/${selectedLogId}/cancel`
+                + `?cancellation_reason=${encodeURIComponent(
+                    reason
+                )}`
+                + `&remarks=${encodeURIComponent(
+                    remarks
+                )}`;
+
+
+            const response =
+                await fetch(
+                    url,
+                    {
+                        method: "PUT"
+                    }
+                );
+
+
+            const result =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                alert(
+                    result.error ||
+                    "Failed to cancel medication."
+                );
+
+                return;
+
+            }
+
+
+            closeCancelModal();
+
+
+            await loadMedications();
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Unable to connect to the server."
+            );
+
+        }
+
+    }
+
+
+    // =================================================
+    // LOAD STAFF FOR LOGIN
+    // =================================================
+
+    async function loadStaffForLogin() {
+
+        try {
+
+            const response =
+                await fetch(
+                    `${API_URL}/staff`
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Failed to load staff."
+                );
+
+            }
+
+
+            const staff =
+                await response.json();
+
+
+            const select =
+                document.getElementById(
+                    "staffSelect"
+                );
+
+
+            if (!select) {
+
+                return;
+
+            }
+
+
+            select.innerHTML =
+                `<option value="">
+                    Select your name
+                </option>`;
+
+
+            staff
+                .filter(
+                    person =>
+                        person.role ===
+                        "Training Officer"
+                )
+                .forEach(
+                    person => {
+
+                        const option =
+                            document.createElement(
+                                "option"
+                            );
+
+
+                        option.value =
+                            person.staff_id;
+
+
+                        option.textContent =
+                            person.name;
+
+
+                        select.appendChild(
+                            option
+                        );
+
+                    }
+                );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+
+            const loginError =
+                document.getElementById(
+                    "loginError"
+                );
+
+
+            if (loginError) {
+
+                loginError.textContent =
+                    "Unable to connect to the server.";
+
+            }
+
+        }
+
+    }
+
+
+    // =================================================
+    // LOGIN
+    // =================================================
+
+    async function login() {
+
+        const select =
+            document.getElementById(
+                "staffSelect"
+            );
+
+
+        const errorMessage =
+            document.getElementById(
+                "loginError"
+            );
+
+
+        if (!select) {
+
+            return;
+
+        }
+
+
+        const staffId =
+            select.value;
+
+
+        if (!staffId) {
+
+            if (errorMessage) {
+
+                errorMessage.textContent =
+                    "Please select your name.";
+
+            }
+
+            return;
+
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `${API_URL}/login`,
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            staff_id:
+                                staffId
+                        })
+
+                    }
+                );
+
+
+            const result =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                if (errorMessage) {
+
+                    errorMessage.textContent =
+                        result.detail ||
+                        "Login failed.";
+
+                }
+
+                return;
+
+            }
+
+
+            // Save logged-in staff
+
+            localStorage.setItem(
+                "staff_id",
+                result.staff_id
+            );
+
+
+            localStorage.setItem(
+                "staff_name",
+                result.name
+            );
+
+
+            localStorage.setItem(
+                "staff_role",
+                result.role
+            );
+
+
+            // Hide login
+
+            document.getElementById(
+                "loginScreen"
+            ).style.display =
+                "none";
+
+
+            // Show application
+
+            document.getElementById(
+                "appContent"
+            ).style.display =
+                "block";
+
+
+            // Load staff
+
+            await loadStaff();
+
+
+            // Load medications
+
+            await loadMedications();
+
+
+        } catch (error) {
+
+            console.error(error);
+
+
+            if (errorMessage) {
+
+                errorMessage.textContent =
+                    "Unable to connect to the server.";
+
+            }
+
+        }
+
+    }
+
+</script>
+```
+
+</body>
+
+</html>

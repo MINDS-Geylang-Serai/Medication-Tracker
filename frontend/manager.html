@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Manager - Medication Overview</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f6f8;
+            color: #222;
+        }
+
+
+        header {
+            background-color: white;
+            padding: 22px 30px;
+            border-bottom: 1px solid #ddd;
+        }
+
+
+        header h1 {
+            margin: 0;
+            font-size: 26px;
+        }
+
+
+        .date {
+            margin-top: 6px;
+            color: #666;
+        }
+
+
+        .container {
+            max-width: 1100px;
+            margin: 25px auto;
+            padding: 0 20px;
+        }
+
+
+        .summary {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+
+        .summary-box {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px 20px;
+            min-width: 150px;
+        }
+
+
+        .number {
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+
+        .label {
+            color: #666;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+
+        th {
+            text-align: left;
+            padding: 15px;
+            background-color: #f1f3f5;
+            font-size: 14px;
+        }
+
+
+        td {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            font-size: 14px;
+        }
+
+
+        tr:hover {
+            background-color: #fafafa;
+        }
+
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+
+        .pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+
+        .administered {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+
+        .cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+
+        .refresh {
+            margin-top: 20px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            background-color: #1976d2;
+            color: white;
+            cursor: pointer;
+        }
+
+
+        .refresh:hover {
+            background-color: #1565c0;
+        }
+
+
+        .loading {
+            padding: 30px;
+            text-align: center;
+            color: #666;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <header>
+
+        <h1>
+            Medication Overview
+        </h1>
+
+        <div
+            class="date"
+            id="date"
+        ></div>
+
+    </header>
+
+
+    <div class="container">
+
+
+        <!-- SUMMARY -->
+
+        <div class="summary">
+
+            <div class="summary-box">
+
+                <div
+                    class="number"
+                    id="total"
+                >
+                    0
+                </div>
+
+                <div class="label">
+                    Total Medications
+                </div>
+
+            </div>
+
+
+            <div class="summary-box">
+
+                <div
+                    class="number"
+                    id="pending"
+                >
+                    0
+                </div>
+
+                <div class="label">
+                    Pending
+                </div>
+
+            </div>
+
+
+            <div class="summary-box">
+
+                <div
+                    class="number"
+                    id="done"
+                >
+                    0
+                </div>
+
+                <div class="label">
+                    Completed
+                </div>
+
+            </div>
+
+
+            <div class="summary-box">
+
+                <div
+                    class="number"
+                    id="cancelled"
+                >
+                    0
+                </div>
+
+                <div class="label">
+                    Cancelled
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TABLE -->
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Trainee
+                        </th>
+
+                        <th>
+                            Medication
+                        </th>
+
+                        <th>
+                            Dosage
+                        </th>
+
+                        <th>
+                            Expected Time
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="medication-table">
+
+                    <tr>
+
+                        <td
+                            colspan="5"
+                            class="loading"
+                        >
+                            Loading...
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <button
+            class="refresh"
+            onclick="loadMedications()"
+        >
+            Refresh
+        </button>
+
+
+    </div>
+
+
+    <script>
+
+        const API_URL =
+            "http://127.0.0.1:8000";
+
+
+        document.getElementById(
+            "date"
+        ).textContent =
+            new Date().toLocaleDateString(
+                undefined,
+                {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric"
+                }
+            );
+
+
+        async function loadMedications() {
+
+            const table =
+                document.getElementById(
+                    "medication-table"
+                );
+
+
+            table.innerHTML = `
+                <tr>
+                    <td colspan="5" class="loading">
+                        Loading...
+                    </td>
+                </tr>
+            `;
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${API_URL}/medications`
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Failed to load medications"
+                    );
+
+                }
+
+
+                const medications =
+                    await response.json();
+
+
+                // -----------------------------
+                // SUMMARY
+                // -----------------------------
+
+                const pending =
+                    medications.filter(
+                        med =>
+                            med.status === "Pending"
+                    ).length;
+
+
+                const done =
+                    medications.filter(
+                        med =>
+                            med.status === "Administered"
+                    ).length;
+
+
+                const cancelled =
+                    medications.filter(
+                        med =>
+                            med.status === "Cancelled"
+                    ).length;
+
+
+                document.getElementById(
+                    "total"
+                ).textContent =
+                    medications.length;
+
+
+                document.getElementById(
+                    "pending"
+                ).textContent =
+                    pending;
+
+
+                document.getElementById(
+                    "done"
+                ).textContent =
+                    done;
+
+
+                document.getElementById(
+                    "cancelled"
+                ).textContent =
+                    cancelled;
+
+
+                // -----------------------------
+                // TABLE
+                // -----------------------------
+
+                table.innerHTML = "";
+
+
+                medications.forEach(
+                    med => {
+
+                        const row =
+                            document.createElement(
+                                "tr"
+                            );
+
+
+                        let statusClass =
+                            "pending";
+
+
+                        let statusText =
+                            "Pending";
+
+
+                        if (
+                            med.status ===
+                            "Administered"
+                        ) {
+
+                            statusClass =
+                                "administered";
+
+                            statusText =
+                                "✓ Done";
+
+                        }
+
+
+                        if (
+                            med.status ===
+                            "Cancelled"
+                        ) {
+
+                            statusClass =
+                                "cancelled";
+
+                            statusText =
+                                "✕ Cancelled";
+
+                        }
+
+
+                        row.innerHTML = `
+
+                            <td>
+                                <strong>
+                                    ${med.trainee}
+                                </strong>
+                            </td>
+
+                            <td>
+                                ${med.medication}
+                            </td>
+
+                            <td>
+                                ${med.dosage}
+                            </td>
+
+                            <td>
+                                ${med.scheduled_time}
+                            </td>
+
+                            <td>
+
+                                <span
+                                    class="status ${statusClass}"
+                                >
+                                    ${statusText}
+                                </span>
+
+                            </td>
+
+                        `;
+
+
+                        table.appendChild(row);
+
+                    }
+                );
+
+
+            } catch (error) {
+
+                console.error(error);
+
+
+                table.innerHTML = `
+                    <tr>
+                        <td
+                            colspan="5"
+                            class="loading"
+                        >
+                            Unable to load medication data.
+                        </td>
+                    </tr>
+                `;
+
+            }
+
+        }
+
+
+        loadMedications();
+
+    </script>
+
+</body>
+
+</html>
