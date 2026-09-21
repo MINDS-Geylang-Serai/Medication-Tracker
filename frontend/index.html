@@ -31,6 +31,36 @@
         color: #222;
     }
 
+    .connection-banner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        background: #fff3cd;
+        border: 1px solid #ffecb5;
+    }
+
+    .connection-banner strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .connection-banner p {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .connection-banner button {
+        padding: 10px 18px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
 
     /* =================================================
        LOGIN
@@ -519,11 +549,21 @@
 <!-- MAIN APPLICATION -->
 <!-- ================================================= -->
 
-<div
-    id="appContent"
-    class="app-container"
-    style="display: none;"
->
+<div id="appContent" class="app-container" style="display: none;">
+
+    <div id="connectionBanner" class="connection-banner" style="display: none;">
+        <div>
+            <strong id="connectionTitle">Connection lost</strong>
+            <p id="connectionMessage">
+                We can't connect to the medication system right now.
+                Your data has not been submitted.
+            </p>
+        </div>
+
+        <button onclick="reconnect()" id="reconnectButton">
+            Reconnect
+        </button>
+    </div>
 
 
     <!-- HEADER -->
@@ -825,6 +865,134 @@
 
     let selectedMedication = null;
 
+    function showConnectionError(
+        message = "We can't connect to the medication system right now."
+    ) {
+        const banner =
+            document.getElementById(
+                "connectionBanner"
+            );
+
+        const messageElement =
+            document.getElementById(
+                "connectionMessage"
+            );
+
+        const titleElement =
+            document.getElementById(
+                "connectionTitle"
+            );
+
+        const button =
+            document.getElementById(
+                "reconnectButton"
+            );
+
+        if (banner) {
+            banner.style.display = "flex";
+        }
+
+        if (titleElement) {
+            titleElement.textContent =
+                "Connection lost";
+        }
+
+        if (messageElement) {
+            messageElement.textContent =
+                message +
+                " Your data has not been submitted.";
+        }
+
+        if (button) {
+            button.style.display = "block";
+        }
+    }
+
+
+    function showConnectionSuccess() {
+        const banner = document.getElementById("connectionBanner");
+        const titleElement = document.getElementById("connectionTitle");
+        const messageElement = document.getElementById("connectionMessage");
+        const button = document.getElementById("reconnectButton");
+
+        if (!banner) return;
+
+        banner.style.display = "flex";
+
+        titleElement.textContent = "Connected";
+        messageElement.textContent = "The medication system is connected again.";
+
+        if (button) {
+            button.style.display = "none";
+        }
+
+        setTimeout(() => {
+            banner.style.display = "none";
+
+            if (button) {
+                button.style.display = "block";
+            }
+        }, 2500);
+    }
+
+
+    async function reconnect() {
+        const button =
+            document.getElementById(
+                "reconnectButton"
+            );
+
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Reconnecting...";
+        }
+
+        try {
+            const response =
+                await fetch(
+                    `${API_URL}/health`,
+                    {
+                        method: "GET"
+                    }
+                );
+
+            if (!response.ok) {
+                throw new Error(
+                    "Server returned an error."
+                );
+            }
+
+            const result =
+                await response.json();
+
+            if (result.status !== "ok") {
+                throw new Error(
+                    "Server is not healthy."
+                );
+            }
+
+            await loadMedications();
+
+            showConnectionSuccess();
+
+        } catch (error) {
+            console.error(
+                "Reconnect failed:",
+                error
+            );
+
+            showConnectionError(
+                "The medication system is still unavailable. Please try again in a moment."
+            );
+
+        } finally {
+            if (button) {
+                button.disabled = false;
+                button.textContent = "Reconnect";
+            }
+        }
+    }
+
 
     // =================================================
     // START APP
@@ -951,351 +1119,216 @@
     // =================================================
 
     async function loadMedications() {
-
-        const container =
-            document.getElementById(
-                "medications"
-            );
-
+        const container = document.getElementById("medications");
 
         if (!container) {
-
             return;
-
         }
 
-
-        container.innerHTML =
-            `<div class="message">
+        container.innerHTML = `
+            <div class="message">
                 Loading...
-            </div>`;
-
+            </div>
+        `;
 
         try {
-
-            const response =
-                await fetch(
-                    `${API_URL}/medications`
-                );
-
+            const response = await fetch(`${API_URL}/medications`);
 
             if (!response.ok) {
-
-                throw new Error(
-                    "Failed to load medications."
-                );
-
+                throw new Error("Failed to load medications.");
             }
 
+            const medications = await response.json();
 
-            const medications =
-                await response.json();
+            window.currentMedications = medications;
 
-
-            window.currentMedications =
-                medications;
-
-
-            updateSummary(
-                medications
-            );
-
+            updateSummary(medications);
 
             container.innerHTML = "";
 
-
-            if (
-                medications.length === 0
-            ) {
-
-                container.innerHTML =
-                    `<div class="message">
+            if (medications.length === 0) {
+                container.innerHTML = `
+                    <div class="message">
                         No medications scheduled.
-                    </div>`;
+                    </div>
+                `;
 
                 return;
-
             }
 
+            medications.forEach(med => {
+                const card = document.createElement("div");
 
-            medications.forEach(
-                med => {
+                card.className = "medication-card";
 
-                    const card =
-                        document.createElement(
-                            "div"
-                        );
+                let statusClass = "status-pending";
 
+                if (med.status === "Administered") {
+                    statusClass = "status-administered";
+                }
 
-                    card.className =
-                        "medication-card";
+                if (med.status === "Cancelled") {
+                    statusClass = "status-cancelled";
+                }
 
+                let statusText = med.status;
 
-                    let statusClass =
-                        "status-pending";
+                if (med.status === "Administered") {
+                    statusText = "✓ Administered";
+                }
 
+                if (med.status === "Cancelled") {
+                    statusText = "✕ Cancelled";
+                }
 
-                    if (
-                        med.status ===
-                        "Administered"
-                    ) {
+                let completedInfo = "";
 
-                        statusClass =
-                            "status-administered";
+                if (med.status === "Administered") {
+                    const actualTime = med.actual_time
+                        ? new Date(med.actual_time).toLocaleTimeString()
+                        : "-";
 
-                    }
-
-
-                    if (
-                        med.status ===
-                        "Cancelled"
-                    ) {
-
-                        statusClass =
-                            "status-cancelled";
-
-                    }
-
-
-                    let statusText =
-                        med.status;
-
-
-                    if (
-                        med.status ===
-                        "Administered"
-                    ) {
-
-                        statusText =
-                            "✓ Administered";
-
-                    }
-
-
-                    if (
-                        med.status ===
-                        "Cancelled"
-                    ) {
-
-                        statusText =
-                            "✕ Cancelled";
-
-                    }
-
-
-                    let completedInfo = "";
-
-
-                    if (
-                        med.status ===
-                        "Administered"
-                    ) {
-
-                        const actualTime =
-                            med.actual_time
-                                ? new Date(
-                                    med.actual_time
-                                ).toLocaleTimeString()
-                                : "-";
-
-
-                        completedInfo = `
-
-                            <div class="completed-info">
-
-                                <strong>
-                                    Administration Record
-                                </strong>
-
-                                <br>
-
-                                Given by:
-                                ${
-                                    med.given_by_name
-                                    || "Unknown"
-                                }
-
-                                <br>
-
-                                Witnessed by:
-                                ${
-                                    med.witnessed_by_name
-                                    || "Unknown"
-                                }
-
-                                <br>
-
-                                Actual time:
-                                ${actualTime}
-
-                                ${
-                                    med.remarks
-                                    ? `<br>
-                                       Remarks:
-                                       ${med.remarks}`
-                                    : ""
-                                }
-
-                            </div>
-
-                        `;
-
-                    }
-
-
-                    if (
-                        med.status ===
-                        "Cancelled"
-                    ) {
-
-                        completedInfo = `
-
-                            <div class="completed-info">
-
-                                <strong>
-                                    Cancellation Record
-                                </strong>
-
-                                <br>
-
-                                Reason:
-                                ${
-                                    med.cancellation_reason
-                                    || "Unknown"
-                                }
-
-                                ${
-                                    med.remarks
-                                    ? `<br>
-                                       Remarks:
-                                       ${med.remarks}`
-                                    : ""
-                                }
-
-                            </div>
-
-                        `;
-
-                    }
-
-
-                    let actions = "";
-
-
-                    if (
-                        med.status ===
-                        "Pending"
-                    ) {
-
-                        actions = `
-
-                            <div class="actions">
-
-                                <button
-                                    class="administer"
-                                    onclick="openAdministerModal('${med.log_id}')"
-                                >
-                                    Administer
-                                </button>
-
-
-                                <button
-                                    class="cancel"
-                                    onclick="openCancelModal('${med.log_id}')"
-                                >
-                                    Cancel
-                                </button>
-
-                            </div>
-
-                        `;
-
-                    }
-
-
-                    card.innerHTML = `
-
-                        <div class="card-top">
-
-                            <div>
-
-                                <div class="trainee">
-                                    ${med.trainee}
-                                </div>
-
-                                <div class="medication">
-                                    ${med.medication}
-                                </div>
-
-                            </div>
-
-
-                            <div
-                                class="status ${statusClass}"
-                            >
-                                ${statusText}
-                            </div>
-
-                        </div>
-
-
-                        <div class="details">
-
-                            Dosage:
-                            ${med.dosage}
+                    completedInfo = `
+                        <div class="completed-info">
+                            <strong>
+                                Administration Record
+                            </strong>
 
                             <br>
 
-                            Scheduled:
-                            ${med.scheduled_time}
+                            Given by:
+                            ${med.given_by_name || "Unknown"}
+
+                            <br>
+
+                            Witnessed by:
+                            ${med.witnessed_by_name || "Unknown"}
+
+                            <br>
+
+                            Actual time:
+                            ${actualTime}
 
                             ${
-                                med.instructions
+                                med.remarks
+                                    ? `<br>
+                                       Remarks:
+                                       ${med.remarks}`
+                                    : ""
+                            }
+                        </div>
+                    `;
+                }
+
+                if (med.status === "Cancelled") {
+                    completedInfo = `
+                        <div class="completed-info">
+                            <strong>
+                                Cancellation Record
+                            </strong>
+
+                            <br>
+
+                            Reason:
+                            ${med.cancellation_reason || "Unknown"}
+
+                            ${
+                                med.remarks
+                                    ? `<br>
+                                       Remarks:
+                                       ${med.remarks}`
+                                    : ""
+                            }
+                        </div>
+                    `;
+                }
+
+                let actions = "";
+
+                if (med.status === "Pending") {
+                    actions = `
+                        <div class="actions">
+                            <button
+                                class="administer"
+                                onclick="openAdministerModal('${med.log_id}')"
+                            >
+                                Administer
+                            </button>
+
+                            <button
+                                class="cancel"
+                                onclick="openCancelModal('${med.log_id}')"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="card-top">
+                        <div>
+                            <div class="trainee">
+                                ${med.trainee}
+                            </div>
+
+                            <div class="medication">
+                                ${med.medication}
+                            </div>
+                        </div>
+
+                        <div class="status ${statusClass}">
+                            ${statusText}
+                        </div>
+                    </div>
+
+                    <div class="details">
+                        Dosage:
+                        ${med.dosage}
+
+                        <br>
+
+                        Scheduled:
+                        ${med.scheduled_time}
+
+                        ${
+                            med.instructions
                                 ? `<div class="instructions">
                                      Instructions:
                                      ${med.instructions}
                                    </div>`
                                 : ""
-                            }
+                        }
+                    </div>
 
-                        </div>
+                    ${completedInfo}
 
+                    ${actions}
+                `;
 
-                        ${completedInfo}
-
-
-                        ${actions}
-
-                    `;
-
-
-                    container.appendChild(
-                        card
-                    );
-
-                }
+                container.appendChild(card);
+            });
+        } catch (error) {
+            console.error(
+                "Failed to load medications:",
+                error
             );
 
-
-        } catch (error) {
-
-            console.error(error);
-
-
-            container.innerHTML =
-                `<div class="message">
-
-                    Unable to load medications.
+            container.innerHTML = `
+                <div class="message">
+                    Unable to load today's medications.
 
                     <br><br>
 
-                    Make sure the FastAPI server
-                    is running.
+                    Please check your connection
+                    and use the Reconnect button above.
+                </div>
+            `;
 
-                </div>`;
-
+            showConnectionError(
+                "We can't load today's medications."
+            );
         }
-
     }
 
 
@@ -1464,47 +1497,35 @@
     // =================================================
     // CONFIRM ADMINISTER
     // =================================================
-
     async function confirmAdminister() {
-
         const witnessedBy =
             document.getElementById(
                 "witnessed-by"
             ).value;
-
 
         const remarks =
             document.getElementById(
                 "administer-remarks"
             ).value;
 
-
         if (!witnessedBy) {
-
             alert(
                 "Please select who witnessed the medication."
             );
 
             return;
-
         }
-
 
         const confirmed =
             confirm(
                 "Confirm that this medication has been administered?"
             );
 
-
         if (!confirmed) {
-
             return;
-
         }
 
-
         try {
-
             const url =
                 `${API_URL}/medications/${selectedLogId}/administer`
                 + `?witnessed_by=${encodeURIComponent(
@@ -1514,7 +1535,6 @@
                     remarks
                 )}`;
 
-
             const response =
                 await fetch(
                     url,
@@ -1523,39 +1543,36 @@
                     }
                 );
 
-
             const result =
                 await response.json();
 
-
             if (!response.ok) {
+                console.error(
+                    "Administration failed:",
+                    result
+                );
 
-                alert(
-                    result.error ||
-                    "Failed to administer medication."
+                showConnectionError(
+                    "The medication could not be recorded."
                 );
 
                 return;
-
             }
-
 
             closeAdministerModal();
 
-
             await loadMedications();
 
-
         } catch (error) {
-
-            console.error(error);
-
-            alert(
-                "Unable to connect to the server."
+            console.error(
+                "Unable to administer medication:",
+                error
             );
 
+            showConnectionError(
+                "We couldn't connect to the medication system. The medication has not been recorded."
+            );
         }
-
     }
 
 
@@ -1632,45 +1649,34 @@
     // =================================================
 
     async function confirmCancel() {
-
         const reason =
             document.getElementById(
                 "cancellation-reason"
             ).value;
-
 
         const remarks =
             document.getElementById(
                 "cancel-remarks"
             ).value;
 
-
         if (!reason) {
-
             alert(
                 "Please select a cancellation reason."
             );
 
             return;
-
         }
-
 
         const confirmed =
             confirm(
                 `Cancel this medication?\n\nReason: ${reason}`
             );
 
-
         if (!confirmed) {
-
             return;
-
         }
 
-
         try {
-
             const url =
                 `${API_URL}/medications/${selectedLogId}/cancel`
                 + `?cancellation_reason=${encodeURIComponent(
@@ -1680,7 +1686,6 @@
                     remarks
                 )}`;
 
-
             const response =
                 await fetch(
                     url,
@@ -1689,39 +1694,36 @@
                     }
                 );
 
-
             const result =
                 await response.json();
 
-
             if (!response.ok) {
+                console.error(
+                    "Cancellation failed:",
+                    result
+                );
 
-                alert(
-                    result.error ||
-                    "Failed to cancel medication."
+                showConnectionError(
+                    "The medication could not be cancelled."
                 );
 
                 return;
-
             }
-
 
             closeCancelModal();
 
-
             await loadMedications();
 
-
         } catch (error) {
-
-            console.error(error);
-
-            alert(
-                "Unable to connect to the server."
+            console.error(
+                "Unable to cancel medication:",
+                error
             );
 
+            showConnectionError(
+                "We couldn't connect to the medication system. The cancellation has not been recorded."
+            );
         }
-
     }
 
 
@@ -1771,35 +1773,29 @@
                 </option>`;
 
 
-            staff
-                .filter(
-                    person =>
-                        person.role ===
-                        "Training Officer"
-                )
-                .forEach(
-                    person => {
+            staff.forEach(
+                person => {
 
-                        const option =
-                            document.createElement(
-                                "option"
-                            );
-
-
-                        option.value =
-                            person.staff_id;
-
-
-                        option.textContent =
-                            person.name;
-
-
-                        select.appendChild(
-                            option
+                    const option =
+                        document.createElement(
+                            "option"
                         );
 
-                    }
-                );
+
+                    option.value =
+                        person.staff_id;
+
+
+                    option.textContent =
+                        `${person.name} (${person.role})`;
+
+
+                    select.appendChild(
+                        option
+                    );
+
+                }
+            );
 
 
         } catch (error) {
@@ -1823,7 +1819,6 @@
         }
 
     }
-
 
     // =================================================
     // LOGIN
@@ -1929,31 +1924,60 @@
             );
 
 
-            // Hide login
+            // ---------------------------------
+            // ROUTE USER BASED ON ROLE
+            // ---------------------------------
 
-            document.getElementById(
-                "loginScreen"
-            ).style.display =
-                "none";
+            if (
+                result.role ===
+                "Manager"
+            ) {
 
+                window.location.href =
+                    "manager.html";
 
-            // Show application
+                return;
 
-            document.getElementById(
-                "appContent"
-            ).style.display =
-                "block";
-
-
-            // Load staff
-
-            await loadStaff();
+            }
 
 
-            // Load medications
+            if (
+                result.role ===
+                "Training Officer"
+            ) {
 
-            await loadMedications();
+                // Continue showing the
+                // Training Officer application
 
+                document.getElementById(
+                    "loginScreen"
+                ).style.display =
+                    "none";
+
+
+                document.getElementById(
+                    "appContent"
+                ).style.display =
+                    "block";
+
+
+                await loadStaff();
+
+                await loadMedications();
+
+                return;
+
+            }
+
+
+            // Unknown role
+
+            if (errorMessage) {
+
+                errorMessage.textContent =
+                    "Your account does not have a valid role.";
+
+            }
 
         } catch (error) {
 

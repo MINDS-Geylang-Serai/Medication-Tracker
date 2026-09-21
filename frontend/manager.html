@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Manager - Medication Overview</title>
+    <title>Manager - Medication Management</title>
 
 
     <style>
@@ -48,9 +48,38 @@
 
 
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 25px auto;
             padding: 0 20px;
+        }
+
+
+        .section {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+
+        .section-content {
+            padding: 20px;
         }
 
 
@@ -85,9 +114,6 @@
 
 
         .table-container {
-            background: white;
-            border-radius: 10px;
-            border: 1px solid #ddd;
             overflow-x: auto;
         }
 
@@ -100,14 +126,14 @@
 
         th {
             text-align: left;
-            padding: 15px;
+            padding: 13px;
             background-color: #f1f3f5;
             font-size: 14px;
         }
 
 
         td {
-            padding: 15px;
+            padding: 13px;
             border-top: 1px solid #eee;
             font-size: 14px;
         }
@@ -124,6 +150,18 @@
             border-radius: 15px;
             font-size: 12px;
             font-weight: bold;
+        }
+
+
+        .active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+
+        .inactive {
+            background-color: #e9ecef;
+            color: #666;
         }
 
 
@@ -145,19 +183,169 @@
         }
 
 
-        .refresh {
-            margin-top: 20px;
-            padding: 10px 18px;
+        button {
             border: none;
             border-radius: 6px;
-            background-color: #1976d2;
-            color: white;
+            padding: 9px 14px;
             cursor: pointer;
+            font-weight: 600;
         }
 
 
-        .refresh:hover {
+        .primary-button {
+            background-color: #1976d2;
+            color: white;
+        }
+
+
+        .primary-button:hover {
             background-color: #1565c0;
+        }
+
+
+        .secondary-button {
+            background-color: #e9ecef;
+            color: #333;
+        }
+
+
+        .secondary-button:hover {
+            background-color: #dee2e6;
+        }
+
+
+        .edit-button {
+            background-color: #e9ecef;
+            color: #333;
+        }
+
+
+        .toggle-button {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+
+        .refresh {
+            margin-top: 20px;
+            padding: 10px 18px;
+            background-color: #1976d2;
+            color: white;
+        }
+
+
+        .form-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+            gap: 15px;
+        }
+
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+
+        label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.45);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+
+        .modal-card {
+            background-color: white;
+            width: 100%;
+            max-width: 650px;
+            border-radius: 10px;
+            padding: 25px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+
+        .modal-card h2 {
+            margin-top: 0;
+        }
+
+
+        .close-button {
+            float: right;
+            background: none;
+            font-size: 24px;
+            padding: 0;
+            color: #666;
+        }
+
+
+        .message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            display: none;
+        }
+
+
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
         }
 
 
@@ -165,6 +353,32 @@
             padding: 30px;
             text-align: center;
             color: #666;
+        }
+
+
+        .empty {
+            padding: 25px;
+            text-align: center;
+            color: #666;
+        }
+
+
+        @media (max-width: 700px) {
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full {
+                grid-column: auto;
+            }
+
+            .section-header {
+                align-items: flex-start;
+                gap: 10px;
+                flex-direction: column;
+            }
+
         }
 
     </style>
@@ -175,381 +389,2636 @@
 <body>
 
 
-    <header>
+<header>
 
-        <h1>
-            Medication Overview
-        </h1>
+    <h1>
+        Manager Dashboard
+    </h1>
 
-        <div
-            class="date"
-            id="date"
-        ></div>
+    <div
+        class="date"
+        id="date"
+    ></div>
 
-    </header>
-
-
-    <div class="container">
+</header>
 
 
-        <!-- SUMMARY -->
-
-        <div class="summary">
-
-            <div class="summary-box">
-
-                <div
-                    class="number"
-                    id="total"
-                >
-                    0
-                </div>
-
-                <div class="label">
-                    Total Medications
-                </div>
-
-            </div>
+<div class="container">
 
 
-            <div class="summary-box">
+    <!-- ================================================= -->
+    <!-- MEDICATION OVERVIEW -->
+    <!-- ================================================= -->
 
-                <div
-                    class="number"
-                    id="pending"
-                >
-                    0
-                </div>
+    <div class="section">
 
-                <div class="label">
-                    Pending
-                </div>
+        <div class="section-header">
 
-            </div>
+            <h2>
+                Medication Overview
+            </h2>
 
-
-            <div class="summary-box">
-
-                <div
-                    class="number"
-                    id="done"
-                >
-                    0
-                </div>
-
-                <div class="label">
-                    Completed
-                </div>
-
-            </div>
-
-
-            <div class="summary-box">
-
-                <div
-                    class="number"
-                    id="cancelled"
-                >
-                    0
-                </div>
-
-                <div class="label">
-                    Cancelled
-                </div>
-
-            </div>
+            <button
+                class="primary-button"
+                onclick="loadMedications()"
+            >
+                Refresh
+            </button>
 
         </div>
 
 
-        <!-- TABLE -->
-
-        <div class="table-container">
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>
-                            Trainee
-                        </th>
-
-                        <th>
-                            Medication
-                        </th>
-
-                        <th>
-                            Dosage
-                        </th>
-
-                        <th>
-                            Expected Time
-                        </th>
-
-                        <th>
-                            Status
-                        </th>
-
-                    </tr>
-
-                </thead>
+        <div class="section-content">
 
 
-                <tbody id="medication-table">
+            <div class="summary">
 
-                    <tr>
+                <div class="summary-box">
 
-                        <td
-                            colspan="5"
-                            class="loading"
-                        >
-                            Loading...
-                        </td>
+                    <div
+                        class="number"
+                        id="total"
+                    >
+                        0
+                    </div>
 
-                    </tr>
+                    <div class="label">
+                        Total Medications
+                    </div>
 
-                </tbody>
+                </div>
 
-            </table>
+
+                <div class="summary-box">
+
+                    <div
+                        class="number"
+                        id="pending"
+                    >
+                        0
+                    </div>
+
+                    <div class="label">
+                        Pending
+                    </div>
+
+                </div>
+
+
+                <div class="summary-box">
+
+                    <div
+                        class="number"
+                        id="done"
+                    >
+                        0
+                    </div>
+
+                    <div class="label">
+                        Completed
+                    </div>
+
+                </div>
+
+
+                <div class="summary-box">
+
+                    <div
+                        class="number"
+                        id="cancelled"
+                    >
+                        0
+                    </div>
+
+                    <div class="label">
+                        Cancelled
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Trainee</th>
+
+                            <th>Medication</th>
+
+                            <th>Dosage</th>
+
+                            <th>Expected Time</th>
+
+                            <th>Status</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="medication-table">
+
+                        <tr>
+
+                            <td
+                                colspan="5"
+                                class="loading"
+                            >
+                                Loading...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
 
         </div>
-
-
-        <button
-            class="refresh"
-            onclick="loadMedications()"
-        >
-            Refresh
-        </button>
-
 
     </div>
 
 
-    <script>
+    <!-- ================================================= -->
+    <!-- STAFF MANAGEMENT -->
+    <!-- ================================================= -->
 
-        const API_URL =
-            "http://127.0.0.1:8000";
+    <div class="section">
+
+        <div class="section-header">
+
+            <h2>
+                Staff Management
+            </h2>
+
+            <button
+                class="primary-button"
+                onclick="openStaffModal()"
+            >
+                + Add Staff
+            </button>
+
+        </div>
 
 
+        <div class="section-content">
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Name</th>
+
+                            <th>Role</th>
+
+                            <th>Unit</th>
+
+                            <th>Status</th>
+
+                            <th>Actions</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="staff-table">
+
+                        <tr>
+
+                            <td
+                                colspan="5"
+                                class="loading"
+                            >
+                                Loading...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- TRAINEE MANAGEMENT -->
+    <!-- ================================================= -->
+
+    <div class="section">
+
+        <div class="section-header">
+
+            <h2>
+                Trainee Management
+            </h2>
+
+            <button
+                class="primary-button"
+                onclick="openTraineeModal()"
+            >
+                + Add Trainee
+            </button>
+
+        </div>
+
+
+        <div class="section-content">
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Name</th>
+
+                            <th>Unit</th>
+
+                            <th>Status</th>
+
+                            <th>Actions</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="trainee-table">
+
+                        <tr>
+
+                            <td
+                                colspan="4"
+                                class="loading"
+                            >
+                                Loading...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- MEDICATION MANAGEMENT -->
+    <!-- ================================================= -->
+
+    <div class="section">
+
+        <div class="section-header">
+
+            <h2>
+                Medication Management
+            </h2>
+
+            <button
+                class="primary-button"
+                onclick="openMedicationModal()"
+            >
+                + Add Medication
+            </button>
+
+        </div>
+
+
+        <div class="section-content">
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Trainee</th>
+
+                            <th>Medication</th>
+
+                            <th>Dosage</th>
+
+                            <th>Frequency</th>
+
+                            <th>Scheduled Time</th>
+
+                            <th>Instructions</th>
+
+                            <th>Status</th>
+
+                            <th>Actions</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="manager-medication-table">
+
+                        <tr>
+
+                            <td
+                                colspan="8"
+                                class="loading"
+                            >
+                                Loading...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- STAFF MODAL -->
+<!-- ===================================================== -->
+
+<div
+    class="modal"
+    id="staffModal"
+>
+
+    <div class="modal-card">
+
+        <button
+            class="close-button"
+            onclick="closeModal('staffModal')"
+        >
+            ×
+        </button>
+
+        <h2 id="staffModalTitle">
+            Add Staff
+        </h2>
+
+
+        <input
+            type="hidden"
+            id="staffId"
+        >
+
+
+        <div class="form-grid">
+
+            <div class="form-group">
+
+                <label for="staffName">
+                    Name
+                </label>
+
+                <input
+                    id="staffName"
+                    type="text"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="staffRole">
+                    Role
+                </label>
+
+                <select id="staffRole">
+
+                    <option value="Training Officer">
+                        Training Officer
+                    </option>
+
+                    <option value="Manager">
+                        Manager
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="staffUnit">
+                    Unit
+                </label>
+
+                <input
+                    id="staffUnit"
+                    type="text"
+                    placeholder="e.g. Unit A"
+                >
+
+            </div>
+
+        </div>
+
+
+        <div
+            class="form-actions"
+        >
+
+            <button
+                class="primary-button"
+                onclick="saveStaff()"
+            >
+                Save
+            </button>
+
+            <button
+                class="secondary-button"
+                onclick="closeModal('staffModal')"
+            >
+                Cancel
+            </button>
+
+        </div>
+
+
+        <div
+            id="staffMessage"
+            class="message"
+        ></div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- TRAINEE MODAL -->
+<!-- ===================================================== -->
+
+<div
+    class="modal"
+    id="traineeModal"
+>
+
+    <div class="modal-card">
+
+        <button
+            class="close-button"
+            onclick="closeModal('traineeModal')"
+        >
+            ×
+        </button>
+
+        <h2 id="traineeModalTitle">
+            Add Trainee
+        </h2>
+
+
+        <input
+            type="hidden"
+            id="traineeId"
+        >
+
+
+        <div class="form-grid">
+
+            <div class="form-group">
+
+                <label for="traineeName">
+                    Name
+                </label>
+
+                <input
+                    id="traineeName"
+                    type="text"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="traineeUnit">
+                    Unit
+                </label>
+
+                <input
+                    id="traineeUnit"
+                    type="text"
+                    placeholder="e.g. Unit A"
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="form-actions">
+
+            <button
+                class="primary-button"
+                onclick="saveTrainee()"
+            >
+                Save
+            </button>
+
+            <button
+                class="secondary-button"
+                onclick="closeModal('traineeModal')"
+            >
+                Cancel
+            </button>
+
+        </div>
+
+
+        <div
+            id="traineeMessage"
+            class="message"
+        ></div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- MEDICATION MODAL -->
+<!-- ===================================================== -->
+
+<div
+    class="modal"
+    id="medicationModal"
+>
+
+    <div class="modal-card">
+
+        <button
+            class="close-button"
+            onclick="closeModal('medicationModal')"
+        >
+            ×
+        </button>
+
+        <h2 id="medicationModalTitle">
+            Add Medication
+        </h2>
+
+
+        <input
+            type="hidden"
+            id="medicationId"
+        >
+
+
+        <div class="form-grid">
+
+
+            <div class="form-group">
+
+                <label for="medicationTrainee">
+                    Trainee
+                </label>
+
+                <select id="medicationTrainee">
+
+                    <option value="">
+                        Select trainee
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="medicationName">
+                    Medication Name
+                </label>
+
+                <input
+                    id="medicationName"
+                    type="text"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="medicationDosage">
+                    Dosage
+                </label>
+
+                <input
+                    id="medicationDosage"
+                    type="text"
+                    placeholder="e.g. 1 tablet"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="medicationFrequency">
+                    Frequency
+                </label>
+
+                <select id="medicationFrequency">
+
+                    <option value="Daily">
+                        Daily
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="medicationTime">
+                    Scheduled Time
+                </label>
+
+                <input
+                    id="medicationTime"
+                    type="time"
+                >
+
+            </div>
+
+
+            <div class="form-group full">
+
+                <label for="medicationInstructions">
+                    Instructions
+                </label>
+
+                <textarea
+                    id="medicationInstructions"
+                    placeholder="e.g. After breakfast"
+                ></textarea>
+
+            </div>
+
+        </div>
+
+
+        <div class="form-actions">
+
+            <button
+                class="primary-button"
+                onclick="saveMedication()"
+            >
+                Save
+            </button>
+
+            <button
+                class="secondary-button"
+                onclick="closeModal('medicationModal')"
+            >
+                Cancel
+            </button>
+
+        </div>
+
+
+        <div
+            id="medicationMessage"
+            class="message"
+        ></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+
+const API_URL =
+    "http://127.0.0.1:8000";
+
+
+let staffData = [];
+let traineeData = [];
+let managerMedicationData = [];
+
+
+// =========================================================
+// DATE
+// =========================================================
+
+document.getElementById(
+    "date"
+).textContent =
+    new Date().toLocaleDateString(
+        undefined,
+        {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        }
+    );
+
+
+// =========================================================
+// GENERAL MODAL FUNCTIONS
+// =========================================================
+
+function closeModal(
+    modalId
+) {
+
+    document.getElementById(
+        modalId
+    ).style.display = "none";
+
+}
+
+
+function openModal(
+    modalId
+) {
+
+    document.getElementById(
+        modalId
+    ).style.display = "flex";
+
+}
+
+
+// =========================================================
+// LOAD MEDICATION OVERVIEW
+// =========================================================
+
+async function loadMedications() {
+
+    const table =
         document.getElementById(
-            "date"
-        ).textContent =
-            new Date().toLocaleDateString(
-                undefined,
-                {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric"
-                }
+            "medication-table"
+        );
+
+
+    table.innerHTML = `
+        <tr>
+            <td
+                colspan="5"
+                class="loading"
+            >
+                Loading...
+            </td>
+        </tr>
+    `;
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/medications`
             );
 
 
-        async function loadMedications() {
-
-            const table =
-                document.getElementById(
-                    "medication-table"
-                );
-
-
-            table.innerHTML = `
-                <tr>
-                    <td colspan="5" class="loading">
-                        Loading...
-                    </td>
-                </tr>
-            `;
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        `${API_URL}/medications`
-                    );
-
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        "Failed to load medications"
-                    );
-
-                }
-
-
-                const medications =
-                    await response.json();
-
-
-                // -----------------------------
-                // SUMMARY
-                // -----------------------------
-
-                const pending =
-                    medications.filter(
-                        med =>
-                            med.status === "Pending"
-                    ).length;
-
-
-                const done =
-                    medications.filter(
-                        med =>
-                            med.status === "Administered"
-                    ).length;
-
-
-                const cancelled =
-                    medications.filter(
-                        med =>
-                            med.status === "Cancelled"
-                    ).length;
-
-
-                document.getElementById(
-                    "total"
-                ).textContent =
-                    medications.length;
-
-
-                document.getElementById(
-                    "pending"
-                ).textContent =
-                    pending;
-
-
-                document.getElementById(
-                    "done"
-                ).textContent =
-                    done;
-
-
-                document.getElementById(
-                    "cancelled"
-                ).textContent =
-                    cancelled;
-
-
-                // -----------------------------
-                // TABLE
-                // -----------------------------
-
-                table.innerHTML = "";
-
-
-                medications.forEach(
-                    med => {
-
-                        const row =
-                            document.createElement(
-                                "tr"
-                            );
-
-
-                        let statusClass =
-                            "pending";
-
-
-                        let statusText =
-                            "Pending";
-
-
-                        if (
-                            med.status ===
-                            "Administered"
-                        ) {
-
-                            statusClass =
-                                "administered";
-
-                            statusText =
-                                "✓ Done";
-
-                        }
-
-
-                        if (
-                            med.status ===
-                            "Cancelled"
-                        ) {
-
-                            statusClass =
-                                "cancelled";
-
-                            statusText =
-                                "✕ Cancelled";
-
-                        }
-
-
-                        row.innerHTML = `
-
-                            <td>
-                                <strong>
-                                    ${med.trainee}
-                                </strong>
-                            </td>
-
-                            <td>
-                                ${med.medication}
-                            </td>
-
-                            <td>
-                                ${med.dosage}
-                            </td>
-
-                            <td>
-                                ${med.scheduled_time}
-                            </td>
-
-                            <td>
-
-                                <span
-                                    class="status ${statusClass}"
-                                >
-                                    ${statusText}
-                                </span>
-
-                            </td>
-
-                        `;
-
-
-                        table.appendChild(row);
-
-                    }
-                );
-
-
-            } catch (error) {
-
-                console.error(error);
-
-
-                table.innerHTML = `
-                    <tr>
-                        <td
-                            colspan="5"
-                            class="loading"
-                        >
-                            Unable to load medication data.
-                        </td>
-                    </tr>
-                `;
-
-            }
+        if (!response.ok) {
+
+            throw new Error(
+                "Failed to load medications."
+            );
 
         }
 
 
-        loadMedications();
+        const medications =
+            await response.json();
 
-    </script>
+
+        const pending =
+            medications.filter(
+                med =>
+                    med.status === "Pending"
+            ).length;
+
+
+        const done =
+            medications.filter(
+                med =>
+                    med.status === "Administered"
+            ).length;
+
+
+        const cancelled =
+            medications.filter(
+                med =>
+                    med.status === "Cancelled"
+            ).length;
+
+
+        document.getElementById(
+            "total"
+        ).textContent =
+            medications.length;
+
+
+        document.getElementById(
+            "pending"
+        ).textContent =
+            pending;
+
+
+        document.getElementById(
+            "done"
+        ).textContent =
+            done;
+
+
+        document.getElementById(
+            "cancelled"
+        ).textContent =
+            cancelled;
+
+
+        table.innerHTML = "";
+
+
+        if (
+            medications.length === 0
+        ) {
+
+            table.innerHTML = `
+                <tr>
+                    <td
+                        colspan="5"
+                        class="empty"
+                    >
+                        No medication records found.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        medications.forEach(
+            med => {
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                let statusClass =
+                    "pending";
+
+
+                let statusText =
+                    "Pending";
+
+
+                if (
+                    med.status ===
+                    "Administered"
+                ) {
+
+                    statusClass =
+                        "administered";
+
+                    statusText =
+                        "✓ Done";
+
+                }
+
+
+                if (
+                    med.status ===
+                    "Cancelled"
+                ) {
+
+                    statusClass =
+                        "cancelled";
+
+                    statusText =
+                        "✕ Cancelled";
+
+                }
+
+
+                row.innerHTML = `
+
+                    <td>
+                        <strong>
+                            ${med.trainee}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${med.medication}
+                    </td>
+
+                    <td>
+                        ${med.dosage}
+                    </td>
+
+                    <td>
+                        ${med.scheduled_time}
+                    </td>
+
+                    <td>
+
+                        <span
+                            class="status ${statusClass}"
+                        >
+                            ${statusText}
+                        </span>
+
+                    </td>
+
+                `;
+
+
+                table.appendChild(row);
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        table.innerHTML = `
+            <tr>
+                <td
+                    colspan="5"
+                    class="loading"
+                >
+                    Unable to load medication data.
+                </td>
+            </tr>
+        `;
+
+    }
+
+}
+
+
+// =========================================================
+// STAFF
+// =========================================================
+
+async function loadStaff() {
+
+    const table =
+        document.getElementById(
+            "staff-table"
+        );
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/manager/staff`
+            );
+
+
+        if (!response.ok) {
+            throw new Error(
+                "Failed to load staff."
+            );
+        }
+
+
+        staffData =
+            await response.json();
+
+
+        table.innerHTML = "";
+
+
+        if (
+            staffData.length === 0
+        ) {
+
+            table.innerHTML = `
+                <tr>
+                    <td
+                        colspan="5"
+                        class="empty"
+                    >
+                        No staff found.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        staffData.forEach(
+            staff => {
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                const statusClass =
+                    staff.active
+                        ? "active"
+                        : "inactive";
+
+
+                const statusText =
+                    staff.active
+                        ? "Active"
+                        : "Inactive";
+
+
+                row.innerHTML = `
+
+                    <td>
+                        <strong>
+                            ${staff.name}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${staff.role}
+                    </td>
+
+                    <td>
+                        ${staff.unit || "-"}
+                    </td>
+
+                    <td>
+
+                        <span
+                            class="status ${statusClass}"
+                        >
+                            ${statusText}
+                        </span>
+
+                    </td>
+
+                    <td>
+
+                        <div
+                            class="action-buttons"
+                        >
+
+                            <button
+                                class="edit-button"
+                                onclick="editStaff('${staff.staff_id}')"
+                            >
+                                Edit
+                            </button>
+
+                            <button
+                                class="toggle-button"
+                                onclick="toggleStaff('${staff.staff_id}')"
+                            >
+                                ${
+                                    staff.active
+                                        ? "Deactivate"
+                                        : "Activate"
+                                }
+                            </button>
+
+                        </div>
+
+                    </td>
+
+                `;
+
+
+                table.appendChild(row);
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        table.innerHTML = `
+            <tr>
+                <td
+                    colspan="5"
+                    class="loading"
+                >
+                    Unable to load staff data.
+                </td>
+            </tr>
+        `;
+
+    }
+
+}
+
+
+function openStaffModal() {
+
+    document.getElementById(
+        "staffModalTitle"
+    ).textContent =
+        "Add Staff";
+
+
+    document.getElementById(
+        "staffId"
+    ).value = "";
+
+
+    document.getElementById(
+        "staffName"
+    ).value = "";
+
+
+    document.getElementById(
+        "staffRole"
+    ).value =
+        "Training Officer";
+
+
+    document.getElementById(
+        "staffUnit"
+    ).value = "";
+
+
+    openModal(
+        "staffModal"
+    );
+
+}
+
+
+function editStaff(
+    staffId
+) {
+
+    const staff =
+        staffData.find(
+            person =>
+                person.staff_id ===
+                staffId
+        );
+
+
+    if (!staff) {
+        return;
+    }
+
+
+    document.getElementById(
+        "staffModalTitle"
+    ).textContent =
+        "Edit Staff";
+
+
+    document.getElementById(
+        "staffId"
+    ).value =
+        staff.staff_id;
+
+
+    document.getElementById(
+        "staffName"
+    ).value =
+        staff.name;
+
+
+    document.getElementById(
+        "staffRole"
+    ).value =
+        staff.role;
+
+
+    document.getElementById(
+        "staffUnit"
+    ).value =
+        staff.unit || "";
+
+
+    openModal(
+        "staffModal"
+    );
+
+}
+
+
+async function saveStaff() {
+
+    const staffId =
+        document.getElementById(
+            "staffId"
+        ).value;
+
+
+    const name =
+        document.getElementById(
+            "staffName"
+        ).value.trim();
+
+
+    const role =
+        document.getElementById(
+            "staffRole"
+        ).value;
+
+
+    const unit =
+        document.getElementById(
+            "staffUnit"
+        ).value.trim();
+
+
+    if (!name) {
+
+        alert(
+            "Please enter a staff name."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        let response;
+
+
+        if (staffId) {
+
+            const existingStaff =
+                staffData.find(
+                    staff =>
+                        staff.staff_id ===
+                        staffId
+                );
+
+
+            response =
+                await fetch(
+                    `${API_URL}/manager/staff/${staffId}`,
+                    {
+                        method: "PUT",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                name: name,
+                                role: role,
+                                unit:
+                                    unit || null,
+                                active:
+                                    existingStaff.active
+                            })
+                    }
+                );
+
+        } else {
+
+            response =
+                await fetch(
+                    `${API_URL}/manager/staff`,
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                name: name,
+                                role: role,
+                                unit:
+                                    unit || null
+                            })
+                    }
+                );
+
+        }
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                result.detail ||
+                "Unable to save staff."
+            );
+
+            return;
+        }
+
+
+        closeModal(
+            "staffModal"
+        );
+
+
+        await loadStaff();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to connect to the server."
+        );
+
+    }
+
+}
+
+
+async function toggleStaff(
+    staffId
+) {
+
+    const staff =
+        staffData.find(
+            person =>
+                person.staff_id ===
+                staffId
+        );
+
+
+    if (!staff) {
+        return;
+    }
+
+
+    const newStatus =
+        !staff.active;
+
+
+    const action =
+        newStatus
+            ? "activate"
+            : "deactivate";
+
+
+    if (
+        !confirm(
+            `Are you sure you want to ${action} ${staff.name}?`
+        )
+    ) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/manager/staff/${staffId}`,
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            name:
+                                staff.name,
+
+                            role:
+                                staff.role,
+
+                            unit:
+                                staff.unit,
+
+                            active:
+                                newStatus
+                        })
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                result.detail ||
+                "Unable to update staff."
+            );
+
+            return;
+        }
+
+
+        await loadStaff();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to connect to the server."
+        );
+
+    }
+
+}
+
+
+// =========================================================
+// TRAINEES
+// =========================================================
+
+async function loadTrainees() {
+
+    const table =
+        document.getElementById(
+            "trainee-table"
+        );
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/manager/trainees`
+            );
+
+
+        if (!response.ok) {
+            throw new Error(
+                "Failed to load trainees."
+            );
+        }
+
+
+        traineeData =
+            await response.json();
+
+
+        table.innerHTML = "";
+
+
+        if (
+            traineeData.length === 0
+        ) {
+
+            table.innerHTML = `
+                <tr>
+                    <td
+                        colspan="4"
+                        class="empty"
+                    >
+                        No trainees found.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        traineeData.forEach(
+            trainee => {
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                const statusClass =
+                    trainee.active
+                        ? "active"
+                        : "inactive";
+
+
+                const statusText =
+                    trainee.active
+                        ? "Active"
+                        : "Inactive";
+
+
+                row.innerHTML = `
+
+                    <td>
+                        <strong>
+                            ${trainee.name}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${trainee.unit}
+                    </td>
+
+                    <td>
+
+                        <span
+                            class="status ${statusClass}"
+                        >
+                            ${statusText}
+                        </span>
+
+                    </td>
+
+                    <td>
+
+                        <div
+                            class="action-buttons"
+                        >
+
+                            <button
+                                class="edit-button"
+                                onclick="editTrainee('${trainee.trainee_id}')"
+                            >
+                                Edit
+                            </button>
+
+                            <button
+                                class="toggle-button"
+                                onclick="toggleTrainee('${trainee.trainee_id}')"
+                            >
+                                ${
+                                    trainee.active
+                                        ? "Deactivate"
+                                        : "Activate"
+                                }
+                            </button>
+
+                        </div>
+
+                    </td>
+
+                `;
+
+
+                table.appendChild(row);
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        table.innerHTML = `
+            <tr>
+                <td
+                    colspan="4"
+                    class="loading"
+                >
+                    Unable to load trainee data.
+                </td>
+            </tr>
+        `;
+
+    }
+
+}
+
+
+function openTraineeModal() {
+
+    document.getElementById(
+        "traineeModalTitle"
+    ).textContent =
+        "Add Trainee";
+
+
+    document.getElementById(
+        "traineeId"
+    ).value = "";
+
+
+    document.getElementById(
+        "traineeName"
+    ).value = "";
+
+
+    document.getElementById(
+        "traineeUnit"
+    ).value = "";
+
+
+    openModal(
+        "traineeModal"
+    );
+
+}
+
+
+function editTrainee(
+    traineeId
+) {
+
+    const trainee =
+        traineeData.find(
+            person =>
+                person.trainee_id ===
+                traineeId
+        );
+
+
+    if (!trainee) {
+        return;
+    }
+
+
+    document.getElementById(
+        "traineeModalTitle"
+    ).textContent =
+        "Edit Trainee";
+
+
+    document.getElementById(
+        "traineeId"
+    ).value =
+        trainee.trainee_id;
+
+
+    document.getElementById(
+        "traineeName"
+    ).value =
+        trainee.name;
+
+
+    document.getElementById(
+        "traineeUnit"
+    ).value =
+        trainee.unit;
+
+
+    openModal(
+        "traineeModal"
+    );
+
+}
+
+
+async function saveTrainee() {
+
+    const traineeId =
+        document.getElementById(
+            "traineeId"
+        ).value;
+
+
+    const name =
+        document.getElementById(
+            "traineeName"
+        ).value.trim();
+
+
+    const unit =
+        document.getElementById(
+            "traineeUnit"
+        ).value.trim();
+
+
+    if (!name || !unit) {
+
+        alert(
+            "Please enter the trainee name and unit."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        let response;
+
+
+        if (traineeId) {
+
+            const existingTrainee =
+                traineeData.find(
+                    trainee =>
+                        trainee.trainee_id ===
+                        traineeId
+                );
+
+
+            response =
+                await fetch(
+                    `${API_URL}/manager/trainees/${traineeId}`,
+                    {
+                        method: "PUT",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                name: name,
+                                unit: unit,
+                                active:
+                                    existingTrainee.active
+                            })
+                    }
+                );
+
+        } else {
+
+            response =
+                await fetch(
+                    `${API_URL}/manager/trainees`,
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                name: name,
+                                unit: unit
+                            })
+                    }
+                );
+
+        }
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                result.detail ||
+                "Unable to save trainee."
+            );
+
+            return;
+        }
+
+
+        closeModal(
+            "traineeModal"
+        );
+
+
+        await loadTrainees();
+
+
+        await loadMedicationTraineeOptions();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to connect to the server."
+        );
+
+    }
+
+}
+
+
+async function toggleTrainee(
+    traineeId
+) {
+
+    const trainee =
+        traineeData.find(
+            person =>
+                person.trainee_id ===
+                traineeId
+        );
+
+
+    if (!trainee) {
+        return;
+    }
+
+
+    const newStatus =
+        !trainee.active;
+
+
+    const action =
+        newStatus
+            ? "activate"
+            : "deactivate";
+
+
+    if (
+        !confirm(
+            `Are you sure you want to ${action} ${trainee.name}?`
+        )
+    ) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/manager/trainees/${traineeId}`,
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            name:
+                                trainee.name,
+
+                            unit:
+                                trainee.unit,
+
+                            active:
+                                newStatus
+                        })
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                result.detail ||
+                "Unable to update trainee."
+            );
+
+            return;
+        }
+
+
+        await loadTrainees();
+
+        await loadMedicationTraineeOptions();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to connect to the server."
+        );
+
+    }
+
+}
+
+
+// =========================================================
+// MEDICATION MANAGEMENT
+// =========================================================
+
+async function loadManagerMedications() {
+
+    const table =
+        document.getElementById(
+            "manager-medication-table"
+        );
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/manager/medications`
+            );
+
+
+        if (!response.ok) {
+            throw new Error(
+                "Failed to load medications."
+            );
+        }
+
+
+        managerMedicationData =
+            await response.json();
+
+
+        table.innerHTML = "";
+
+
+        if (
+            managerMedicationData.length === 0
+        ) {
+
+            table.innerHTML = `
+                <tr>
+                    <td
+                        colspan="8"
+                        class="empty"
+                    >
+                        No medications found.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        managerMedicationData.forEach(
+            medication => {
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                const statusClass =
+                    medication.active
+                        ? "active"
+                        : "inactive";
+
+
+                const statusText =
+                    medication.active
+                        ? "Active"
+                        : "Inactive";
+
+
+                row.innerHTML = `
+
+                    <td>
+                        <strong>
+                            ${medication.trainee_name}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${medication.medication_name}
+                    </td>
+
+                    <td>
+                        ${medication.dosage}
+                    </td>
+
+                    <td>
+                        ${medication.frequency}
+                    </td>
+
+                    <td>
+                        ${medication.scheduled_time}
+                    </td>
+
+                    <td>
+                        ${medication.instructions || "-"}
+                    </td>
+
+                    <td>
+
+                        <span
+                            class="status ${statusClass}"
+                        >
+                            ${statusText}
+                        </span>
+
+                    </td>
+
+                    <td>
+
+                        <div
+                            class="action-buttons"
+                        >
+
+                            <button
+                                class="edit-button"
+                                onclick="editMedication('${medication.medication_id}')"
+                            >
+                                Edit
+                            </button>
+
+                            <button
+                                class="toggle-button"
+                                onclick="toggleMedication('${medication.medication_id}')"
+                            >
+                                ${
+                                    medication.active
+                                        ? "Deactivate"
+                                        : "Activate"
+                                }
+                            </button>
+
+                        </div>
+
+                    </td>
+
+                `;
+
+
+                table.appendChild(row);
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        table.innerHTML = `
+            <tr>
+                <td
+                    colspan="8"
+                    class="loading"
+                >
+                    Unable to load medication data.
+                </td>
+            </tr>
+        `;
+
+    }
+
+}
+
+
+async function loadMedicationTraineeOptions() {
+
+    const select =
+        document.getElementById(
+            "medicationTrainee"
+        );
+
+
+    if (!select) {
+        return;
+    }
+
+
+    select.innerHTML = `
+        <option value="">
+            Select trainee
+        </option>
+    `;
+
+
+    traineeData
+        .filter(
+            trainee =>
+                trainee.active
+        )
+        .forEach(
+            trainee => {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    trainee.trainee_id;
+
+
+                option.textContent =
+                    trainee.name;
+
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
+}
+
+
+async function openMedicationModal() {
+
+    document.getElementById(
+        "medicationModalTitle"
+    ).textContent =
+        "Add Medication";
+
+
+    document.getElementById(
+        "medicationId"
+    ).value = "";
+
+
+    document.getElementById(
+        "medicationName"
+    ).value = "";
+
+
+    document.getElementById(
+        "medicationDosage"
+    ).value = "";
+
+
+    document.getElementById(
+        "medicationFrequency"
+    ).value = "Daily";
+
+
+    document.getElementById(
+        "medicationTime"
+    ).value = "";
+
+
+    document.getElementById(
+        "medicationInstructions"
+    ).value = "";
+
+
+    await loadMedicationTraineeOptions();
+
+
+    document.getElementById(
+        "medicationTrainee"
+    ).value = "";
+
+
+    openModal(
+        "medicationModal"
+    );
+
+}
+
+
+function editMedication(
+    medicationId
+) {
+
+    const medication =
+        managerMedicationData.find(
+            item =>
+                item.medication_id ===
+                medicationId
+        );
+
+
+    if (!medication) {
+        return;
+    }
+
+
+    document.getElementById(
+        "medicationModalTitle"
+    ).textContent =
+        "Edit Medication";
+
+
+    document.getElementById(
+        "medicationId"
+    ).value =
+        medication.medication_id;
+
+
+    document.getElementById(
+        "medicationTrainee"
+    ).innerHTML = `
+
+        <option
+            value="${medication.trainee_id}"
+        >
+            ${medication.trainee_name}
+        </option>
+
+    `;
+
+
+    document.getElementById(
+        "medicationTrainee"
+    ).disabled = true;
+
+
+    document.getElementById(
+        "medicationName"
+    ).value =
+        medication.medication_name;
+
+
+    document.getElementById(
+        "medicationDosage"
+    ).value =
+        medication.dosage;
+
+
+    document.getElementById(
+        "medicationFrequency"
+    ).value =
+        medication.frequency;
+
+
+    document.getElementById(
+        "medicationTime"
+    ).value =
+        medication.scheduled_time;
+
+
+    document.getElementById(
+        "medicationInstructions"
+    ).value =
+        medication.instructions || "";
+
+
+    openModal(
+        "medicationModal"
+    );
+
+}
+
+
+async function saveMedication() {
+
+    const medicationId =
+        document.getElementById(
+            "medicationId"
+        ).value;
+
+
+    const traineeId =
+        document.getElementById(
+            "medicationTrainee"
+        ).value;
+
+
+    const medicationName =
+        document.getElementById(
+            "medicationName"
+        ).value.trim();
+
+
+    const dosage =
+        document.getElementById(
+            "medicationDosage"
+        ).value.trim();
+
+
+    const frequency =
+        document.getElementById(
+            "medicationFrequency"
+        ).value.trim();
+
+
+    const scheduledTime =
+        document.getElementById(
+            "medicationTime"
+        ).value;
+
+
+    const instructions =
+        document.getElementById(
+            "medicationInstructions"
+        ).value.trim();
+
+
+    if (
+        !traineeId ||
+        !medicationName ||
+        !dosage ||
+        !frequency ||
+        !scheduledTime
+    ) {
+
+        alert(
+            "Please complete all required medication fields."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        let response;
+
+
+        if (medicationId) {
+
+            const existingMedication =
+                managerMedicationData.find(
+                    medication =>
+                        medication.medication_id ===
+                        medicationId
+                );
+
+
+            response =
+                await fetch(
+                    `${API_URL}/manager/medications/${medicationId}`,
+                    {
+                        method: "PUT",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                medication_name:
+                                    medicationName,
+
+                                dosage:
+                                    dosage,
+
+                                frequency:
+                                    frequency,
+
+                                scheduled_time:
+                                    scheduledTime,
+
+                                instructions:
+                                    instructions ||
+                                    null,
+
+                                active:
+                                    existingMedication.active
+                            })
+                    }
+                );
+
+        } else {
+
+            response =
+                await fetch(
+                    `${API_URL}/manager/medications`,
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                trainee_id:
+                                    traineeId,
+
+                                medication_name:
+                                    medicationName,
+
+                                dosage:
+                                    dosage,
+
+                                frequency:
+                                    frequency,
+
+                                scheduled_time:
+                                    scheduledTime,
+
+                                instructions:
+                                    instructions ||
+                                    null
+                            })
+                    }
+                );
+
+        }
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                result.detail ||
+                "Unable to save medication."
+            );
+
+            return;
+        }
+
+
+        closeModal(
+            "medicationModal"
+        );
+
+
+        document.getElementById(
+            "medicationTrainee"
+        ).disabled = false;
+
+
+        await loadManagerMedications();
+
+
+        await loadMedications();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to connect to the server."
+        );
+
+    }
+
+}
+
+
+async function toggleMedication(
+    medicationId
+) {
+
+    const medication =
+        managerMedicationData.find(
+            item =>
+                item.medication_id ===
+                medicationId
+        );
+
+
+    if (!medication) {
+        return;
+    }
+
+
+    const newStatus =
+        !medication.active;
+
+
+    const action =
+        newStatus
+            ? "activate"
+            : "deactivate";
+
+
+    if (
+        !confirm(
+            `Are you sure you want to ${action} ${medication.medication_name} for ${medication.trainee_name}?`
+        )
+    ) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/manager/medications/${medicationId}`,
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            medication_name:
+                                medication.medication_name,
+
+                            dosage:
+                                medication.dosage,
+
+                            frequency:
+                                medication.frequency,
+
+                            scheduled_time:
+                                medication.scheduled_time,
+
+                            instructions:
+                                medication.instructions,
+
+                            active:
+                                newStatus
+                        })
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                result.detail ||
+                "Unable to update medication."
+            );
+
+            return;
+        }
+
+
+        await loadManagerMedications();
+
+        await loadMedications();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to connect to the server."
+        );
+
+    }
+
+}
+
+
+// =========================================================
+// INITIAL LOAD
+// =========================================================
+
+async function loadEverything() {
+
+    await loadMedications();
+
+    await loadStaff();
+
+    await loadTrainees();
+
+    await loadManagerMedications();
+
+}
+
+
+loadEverything();
+
+
+</script>
+
 
 </body>
 
