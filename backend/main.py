@@ -91,6 +91,16 @@ def home():
     return FileResponse("frontend/index.html")
 
 
+@app.get("/manager.html")
+def manager_page():
+    return FileResponse("frontend/manager.html")
+
+
+@app.get("/history.html")
+def history_page():
+    return FileResponse("frontend/history.html")
+
+
 # =========================================================
 # LOGIN
 # =========================================================
