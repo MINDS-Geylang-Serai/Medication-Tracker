@@ -964,50 +964,16 @@
                         if (record.actual_time) {
 
                             const timeParts =
-                                    record.actual_time
-                                        .split("T")
-                                        .pop()
-                                        .split(":");
+                                record.actual_time
+                                    .split("T")
+                                    .pop()
+                                    .split(":");
 
 
                             if (timeParts.length >= 2) {
 
-                                    actualTime =
-                                        `${timeParts[0]}:${timeParts[1]}`;
-
-                            }
-
-                        }
-
-
-                        if (
-                            record.actual_time
-                        ) {
-
-                            const parsedTime =
-                                new Date(
-                                    record.actual_time.replace(
-                                        " ",
-                                        "T"
-                                    )
-                                );
-
-
-                            if (
-                                !isNaN(
-                                    parsedTime.getTime()
-                                )
-                            ) {
-
                                 actualTime =
-                                    parsedTime.toLocaleTimeString(
-                                        [],
-                                        {
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                            second: "2-digit"
-                                        }
-                                    );
+                                    `${timeParts[0]}:${timeParts[1]}`;
 
                             }
 
