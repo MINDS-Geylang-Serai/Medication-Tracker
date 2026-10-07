@@ -1154,20 +1154,53 @@
 <div
     id="pdfExportModal"
     class="modal"
-    style="display: none;"
 >
 
     <div class="modal-card">
 
-        <div class="modal-header">
+        <div
+            style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            "
+        >
 
-            <h2>
-                Export Monthly Medication Record
-            </h2>
+            <div>
+
+                <h2
+                    style="
+                        margin: 0 0 5px 0;
+                    "
+                >
+                    Export Monthly Record
+                </h2>
+
+                <p
+                    style="
+                        margin: 0;
+                        color: #666;
+                        font-size: 14px;
+                    "
+                >
+                    Generate a medication administration
+                    record for a selected month.
+                </p>
+
+            </div>
+
 
             <button
-                class="modal-close"
+                type="button"
                 onclick="closePdfExport()"
+                style="
+                    border: none;
+                    background: none;
+                    font-size: 24px;
+                    cursor: pointer;
+                    color: #666;
+                "
             >
                 ×
             </button>
@@ -1175,50 +1208,88 @@
         </div>
 
 
-        <div class="modal-body">
+        <div>
 
-            <label>
+            <label
+                for="pdfTraineeSelect"
+            >
                 Trainee
             </label>
 
             <select
                 id="pdfTraineeSelect"
                 onchange="loadPdfMedications()"
+                style="
+                    width: 100%;
+                    margin-top: 6px;
+                    margin-bottom: 16px;
+                    padding: 10px;
+                    box-sizing: border-box;
+                "
             >
+
                 <option value="">
                     Select trainee
                 </option>
+
             </select>
 
 
-            <label>
+            <label
+                for="pdfMedicationSelect"
+            >
                 Medication
             </label>
 
             <select
                 id="pdfMedicationSelect"
+                style="
+                    width: 100%;
+                    margin-top: 6px;
+                    margin-bottom: 16px;
+                    padding: 10px;
+                    box-sizing: border-box;
+                "
             >
+
                 <option value="">
                     Select medication
                 </option>
+
             </select>
 
 
-            <label>
+            <label
+                for="pdfMonthSelect"
+            >
                 Month
             </label>
 
             <input
                 type="month"
                 id="pdfMonthSelect"
+                style="
+                    width: 100%;
+                    margin-top: 6px;
+                    padding: 10px;
+                    box-sizing: border-box;
+                "
             />
 
         </div>
 
 
-        <div class="modal-footer">
+        <div
+            style="
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                margin-top: 25px;
+            "
+        >
 
             <button
+                type="button"
                 class="secondary-button"
                 onclick="closePdfExport()"
             >
@@ -1226,6 +1297,7 @@
             </button>
 
             <button
+                type="button"
                 class="primary-button"
                 onclick="generateMonthlyPdf()"
             >
