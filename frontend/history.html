@@ -15,6 +15,34 @@
 
 
     <style>
+    
+    .app-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background: white;
+        border-bottom: 1px solid #e5e5e5;
+        padding: 15px 30px;
+        margin-bottom: 25px;
+    }
+
+    .app-header img {
+        height: 42px;
+        width: auto;
+        display: block;
+    }
+
+    .app-header-title {
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .app-header-subtitle {
+        font-size: 13px;
+        color: #777;
+        margin-top: 3px;
+    }
+
 
         * {
             box-sizing: border-box;
@@ -374,6 +402,29 @@
 
 
 <body>
+
+    <div class="app-header">
+
+        <img
+            src="minds-logo.png"
+            alt="MINDS"
+        >
+
+        <div>
+
+            <div class="app-header-title">
+                Medication Tracker
+            </div>
+
+            <div class="app-header-subtitle">
+                Medication Administration System
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- existing page content -->
 
 
     <!-- =================================================
