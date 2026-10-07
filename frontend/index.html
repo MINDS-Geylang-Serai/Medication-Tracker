@@ -1831,23 +1831,17 @@
                 "staffSelect"
             );
 
-
         const errorMessage =
             document.getElementById(
                 "loginError"
             );
 
-
         if (!select) {
-
             return;
-
         }
-
 
         const staffId =
             select.value;
-
 
         if (!staffId) {
 
@@ -1859,9 +1853,7 @@
             }
 
             return;
-
         }
-
 
         try {
 
@@ -1873,21 +1865,21 @@
 
                         headers: {
                             "Content-Type":
-                                "application/json"
+                                "application/json",
+
+                            "X-Dev-Staff-ID":
+                                staffId
                         },
 
                         body: JSON.stringify({
                             staff_id:
                                 staffId
                         })
-
                     }
                 );
 
-
             const result =
                 await response.json();
-
 
             if (!response.ok) {
 
@@ -1900,33 +1892,22 @@
                 }
 
                 return;
-
             }
-
-
-            // Save logged-in staff
 
             localStorage.setItem(
                 "staff_id",
                 result.staff_id
             );
 
-
             localStorage.setItem(
                 "staff_name",
                 result.name
             );
 
-
             localStorage.setItem(
                 "staff_role",
                 result.role
             );
-
-
-            // ---------------------------------
-            // ROUTE USER BASED ON ROLE
-            // ---------------------------------
 
             if (
                 result.role ===
@@ -1937,40 +1918,29 @@
                     "manager.html";
 
                 return;
-
             }
-
 
             if (
                 result.role ===
                 "Training Officer"
             ) {
 
-                // Continue showing the
-                // Training Officer application
-
                 document.getElementById(
                     "loginScreen"
                 ).style.display =
                     "none";
-
 
                 document.getElementById(
                     "appContent"
                 ).style.display =
                     "block";
 
-
                 await loadStaff();
 
                 await loadMedications();
 
                 return;
-
             }
-
-
-            // Unknown role
 
             if (errorMessage) {
 
@@ -1982,7 +1952,6 @@
         } catch (error) {
 
             console.error(error);
-
 
             if (errorMessage) {
 

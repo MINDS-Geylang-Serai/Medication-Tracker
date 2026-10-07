@@ -1,17 +1,188 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+
 from pydantic import BaseModel
+
 from fastapi.middleware.cors import CORSMiddleware
+
 from fastapi.staticfiles import StaticFiles
+
 from fastapi.responses import FileResponse
 
 from datetime import date
 
 from backend.database import get_connection
 
+import base64
+
+import json
 
 app = FastAPI()
 
+#switch for current test login vs eventual Microsoft Authentication
+import os
 
+
+DEV_LOGIN = os.getenv(
+    "DEV_LOGIN",
+    "true"
+).lower() == "true"
+
+
+# Asks - who is making this request?
+def get_current_staff(
+    request: Request
+):
+    """
+    Determines which staff member is making the request.
+
+    Development:
+        Uses the X-Dev-Staff-ID header.
+
+    Production:
+        Uses the Microsoft Entra identity
+        provided by Azure App Service.
+    """
+
+    if DEV_LOGIN:
+
+        staff_id = request.headers.get(
+            "X-Dev-Staff-ID"
+        )
+
+        if not staff_id:
+
+            raise HTTPException(
+                status_code=401,
+                detail="Not logged in."
+            )
+
+        return staff_id
+
+
+    # Production:
+    # Azure App Service Authentication provides
+    # the authenticated Microsoft identity here.
+
+    client_principal = request.headers.get(
+        "X-MS-CLIENT-PRINCIPAL"
+    )
+
+    if not client_principal:
+
+        raise HTTPException(
+            status_code=401,
+            detail="Microsoft authentication is required."
+        )
+
+
+    try:
+
+        decoded = base64.b64decode(
+            client_principal
+        )
+
+        principal = json.loads(
+            decoded
+        )
+
+    except Exception as error:
+
+        print(
+            "ERROR decoding Microsoft identity:",
+            error
+        )
+
+        raise HTTPException(
+            status_code=401,
+            detail="Unable to read Microsoft identity."
+        )
+
+
+    identity = None
+
+
+    for claim in principal.get(
+        "claims",
+        []
+    ):
+
+        claim_type = claim.get(
+            "typ",
+            ""
+        )
+
+        if claim_type in [
+            "http://schemas.microsoft.com/identity/claims/objectidentifier",
+            "http://schemas.microsoft.com/identity/claims/objectidentifier/2"
+        ]:
+
+            identity = claim.get(
+                "val"
+            )
+
+            break
+
+
+    if not identity:
+
+        raise HTTPException(
+            status_code=401,
+            detail="Microsoft identity could not be identified."
+        )
+
+
+    connection = None
+    cursor = None
+
+    try:
+
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT
+                staff_id
+            FROM Staff
+            WHERE microsoft_identity = ?
+              AND active = 1
+        """,
+            identity
+        )
+
+        row = cursor.fetchone()
+
+        if not row:
+
+            raise HTTPException(
+                status_code=403,
+                detail="Your Microsoft account is not authorised to use this system."
+            )
+
+        return row.staff_id
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+
+        print(
+            "ERROR mapping Microsoft identity:",
+            error
+        )
+
+        raise HTTPException(
+            status_code=503,
+            detail="Medication system is temporarily unavailable."
+        )
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if connection:
+            connection.close()
+            
 # =========================================================
 # MODELS
 # =========================================================
@@ -24,6 +195,7 @@ class StaffCreate(BaseModel):
     name: str
     role: str
     unit: str | None = None
+    microsoft_identity: str | None = None
 
 
 class StaffUpdate(BaseModel):
@@ -31,6 +203,7 @@ class StaffUpdate(BaseModel):
     role: str
     unit: str | None = None
     active: bool
+    microsoft_identity: str | None = None
 
 
 class TraineeCreate(BaseModel):
@@ -106,12 +279,19 @@ def history_page():
 # =========================================================
 
 @app.post("/login")
-def login(request: LoginRequest):
+def login(
+    request: Request
+):
 
     connection = None
     cursor = None
 
     try:
+
+        staff_id = get_current_staff(
+            request
+        )
+
         connection = get_connection()
         cursor = connection.cursor()
 
@@ -124,11 +304,12 @@ def login(request: LoginRequest):
             FROM Staff
             WHERE staff_id = ?
               AND active = 1
-        """, request.staff_id)
+        """, staff_id)
 
         row = cursor.fetchone()
 
         if not row:
+
             raise HTTPException(
                 status_code=401,
                 detail="Invalid staff account"
@@ -145,7 +326,11 @@ def login(request: LoginRequest):
         raise
 
     except Exception as error:
-        print("ERROR during login:", error)
+
+        print(
+            "ERROR during login:",
+            error
+        )
 
         raise HTTPException(
             status_code=503,
@@ -153,11 +338,84 @@ def login(request: LoginRequest):
         )
 
     finally:
+
         if cursor:
             cursor.close()
 
         if connection:
             connection.close()
+
+# =========================================================
+# VALIDATE AUTHORITY
+# =========================================================
+
+@app.get("/me")
+def get_me(
+    request: Request
+):
+
+    staff_id = get_current_staff(
+        request
+    )
+
+    connection = None
+    cursor = None
+
+    try:
+
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT
+                staff_id,
+                name,
+                role,
+                unit
+            FROM Staff
+            WHERE staff_id = ?
+              AND active = 1
+        """, staff_id)
+
+        row = cursor.fetchone()
+
+        if not row:
+
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid staff account."
+            )
+
+        return {
+            "staff_id": row.staff_id,
+            "name": row.name,
+            "role": row.role,
+            "unit": row.unit
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+
+        print(
+            "ERROR loading current staff:",
+            error
+        )
+
+        raise HTTPException(
+            status_code=503,
+            detail="Medication system is temporarily unavailable."
+        )
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if connection:
+            connection.close()
+
 
 
 # =========================================================
@@ -223,12 +481,19 @@ def get_staff():
 # =========================================================
 
 @app.get("/manager/staff")
-def get_manager_staff():
+def get_manager_staff(
+    request: Request
+):
 
     connection = None
     cursor = None
 
     try:
+
+        staff_id = get_current_staff(
+            request
+        )
+
         connection = get_connection()
         cursor = connection.cursor()
 
@@ -238,7 +503,37 @@ def get_manager_staff():
                 name,
                 role,
                 unit,
-                active
+                active,
+                microsoft_identity
+            FROM Staff
+            WHERE staff_id = ?
+              AND active = 1
+        """, staff_id)
+
+        current_staff = cursor.fetchone()
+
+        if not current_staff:
+
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid staff account"
+            )
+
+        if current_staff.role != "Manager":
+
+            raise HTTPException(
+                status_code=403,
+                detail="Manager access required."
+            )
+
+        cursor.execute("""
+            SELECT
+                staff_id,
+                name,
+                role,
+                unit,
+                active,
+                microsoft_identity
             FROM Staff
             ORDER BY name
         """)
@@ -248,18 +543,28 @@ def get_manager_staff():
         staff = []
 
         for row in rows:
+
             staff.append({
                 "staff_id": row.staff_id,
                 "name": row.name,
                 "role": row.role,
                 "unit": row.unit,
-                "active": bool(row.active)
+                "active": bool(row.active),
+                "microsoft_identity":
+                    row.microsoft_identity
             })
 
         return staff
 
+    except HTTPException:
+        raise
+
     except Exception as error:
-        print("ERROR loading manager staff:", error)
+
+        print(
+            "ERROR loading manager staff:",
+            error
+        )
 
         raise HTTPException(
             status_code=503,
@@ -267,6 +572,7 @@ def get_manager_staff():
         )
 
     finally:
+
         if cursor:
             cursor.close()
 
@@ -312,14 +618,22 @@ def create_staff(staff: StaffCreate):
 
         cursor.execute("""
             INSERT INTO Staff
-                (staff_id, name, role, unit, active)
+                (
+                    staff_id,
+                    name,
+                    role,
+                    unit,
+                    active,
+                    microsoft_identity
+                )
             VALUES
-                (?, ?, ?, ?, 1)
+                (?, ?, ?, ?, 1, ?)
         """,
             new_staff_id,
             staff.name,
             staff.role,
-            staff.unit
+            staff.unit,
+            staff.microsoft_identity
         )
 
         connection.commit()
@@ -352,7 +666,6 @@ def create_staff(staff: StaffCreate):
 
         if connection:
             connection.close()
-
 
 # =========================================================
 # MANAGER - UPDATE STAFF
@@ -391,13 +704,15 @@ def update_staff(
                 name = ?,
                 role = ?,
                 unit = ?,
-                active = ?
+                active = ?,
+                microsoft_identity = ?
             WHERE staff_id = ?
         """,
             staff.name,
             staff.role,
             staff.unit,
             1 if staff.active else 0,
+            staff.microsoft_identity,
             staff_id
         )
 
@@ -431,7 +746,6 @@ def update_staff(
 
         if connection:
             connection.close()
-
 
 # =========================================================
 # MANAGER - GET ALL TRAINEES
