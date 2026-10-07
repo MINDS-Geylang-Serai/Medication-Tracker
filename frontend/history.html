@@ -961,6 +961,25 @@
                             "-";
 
 
+                        if (record.actual_time) {
+
+                            const timeParts =
+                                    record.actual_time
+                                        .split("T")
+                                        .pop()
+                                        .split(":");
+
+
+                            if (timeParts.length >= 2) {
+
+                                    actualTime =
+                                        `${timeParts[0]}:${timeParts[1]}`;
+
+                            }
+
+                        }
+
+
                         if (
                             record.actual_time
                         ) {
