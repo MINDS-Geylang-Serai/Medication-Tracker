@@ -965,10 +965,32 @@
                             record.actual_time
                         ) {
 
-                            actualTime =
+                            const parsedTime =
                                 new Date(
-                                    record.actual_time
-                                ).toLocaleTimeString();
+                                    record.actual_time.replace(
+                                        " ",
+                                        "T"
+                                    )
+                                );
+
+
+                            if (
+                                !isNaN(
+                                    parsedTime.getTime()
+                                )
+                            ) {
+
+                                actualTime =
+                                    parsedTime.toLocaleTimeString(
+                                        [],
+                                        {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                            second: "2-digit"
+                                        }
+                                    );
+
+                            }
 
                         }
 

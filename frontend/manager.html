@@ -1259,8 +1259,15 @@ async function loadMedications() {
                 med =>
                     med.status === "Cancelled"
             ).length;
+        
 
+        const notAdministered =
+            medications.filter(
+                med =>
+                    med.status === "Not Administered"
+            ).length;
 
+            
         document.getElementById(
             "total"
         ).textContent =
@@ -1348,6 +1355,19 @@ async function loadMedications() {
 
                     statusText =
                         "✕ Cancelled";
+
+                }
+
+                if (
+                    med.status ===
+                    "Not Administered"
+                ) {
+
+                    statusClass =
+                        "not-administered";
+
+                    statusText =
+                        "⚠ Not Administered";
 
                 }
 

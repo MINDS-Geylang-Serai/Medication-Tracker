@@ -8,7 +8,8 @@ from fastapi.staticfiles import StaticFiles
 
 from fastapi.responses import FileResponse
 
-from datetime import date
+from datetime import date, datetime, time, timedelta
+from zoneinfo import ZoneInfo
 
 from backend.database import get_connection
 
@@ -1322,7 +1323,43 @@ def ensure_today_medication_logs(
     Existing logs are never duplicated.
     """
 
-    today = date.today()
+    singapore_now = datetime.now(
+        ZoneInfo("Asia/Singapore")
+    )
+    
+    print(
+        "SINGAPORE NOW:",
+        singapore_now
+    )
+
+    today = singapore_now.date()
+
+    # -----------------------------------------------------
+    # Mark today's unfinished medications as
+    # Not Administered after the 7:00 PM cutoff.
+    # -----------------------------------------------------
+
+    cutoff_time = time(19, 0)
+
+    if singapore_now.time() >= cutoff_time:
+
+        print(
+            "CUTOFF REACHED - marking today's Pending logs as Not Administered"
+        )
+
+        cursor.execute("""
+            UPDATE MedicationLogs
+            SET status = 'Not Administered'
+            WHERE administration_date = ?
+              AND status = 'Pending'
+        """,
+            today
+        )
+        
+        print(
+            "ROWS UPDATED:",
+            cursor.rowcount
+        )
 
     # -----------------------------------------------------
     # Find active medication schedules
