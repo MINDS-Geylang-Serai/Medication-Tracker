@@ -112,8 +112,8 @@ def get_current_staff(
         )
 
         if claim_type in [
-            "http://schemas.microsoft.com/identity/claims/objectidentifier",
-            "http://schemas.microsoft.com/identity/claims/objectidentifier/2"
+            "oid",
+            "http://schemas.microsoft.com/identity/claims/objectidentifier"
         ]:
 
             identity = claim.get(
@@ -182,7 +182,7 @@ def get_current_staff(
 
         if connection:
             connection.close()
-            
+
 # =========================================================
 # MODELS
 # =========================================================
