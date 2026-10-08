@@ -1232,10 +1232,27 @@
 
                 let completedInfo = "";
 
+                //new 
                 if (med.status === "Administered") {
-                    const actualTime = med.actual_time
-                        ? med.actual_time.substring(0, 5)
-                        : "-";
+
+                    let actualTime = "-";
+
+                    if (med.actual_time) {
+
+                        const timeParts =
+                            med.actual_time
+                                .split("T")
+                                .pop()
+                                .split(":");
+
+                        if (timeParts.length >= 2) {
+
+                            actualTime =
+                                `${timeParts[0]}:${timeParts[1]}`;
+
+                        }
+
+                    }
 
                     completedInfo = `
                         <div class="completed-info">
