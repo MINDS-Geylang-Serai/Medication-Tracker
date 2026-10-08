@@ -1487,8 +1487,9 @@ def get_medications():
             ZoneInfo("Asia/Singapore")
         )
 
+        today = singapore_now.date()
+
         # -------------------------------------------------
-        # NEW:
         # Generate today's medication occurrences.
         # -------------------------------------------------
 
