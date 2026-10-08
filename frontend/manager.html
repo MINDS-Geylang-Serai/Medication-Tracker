@@ -739,29 +739,31 @@
     <!-- MEDICATION MANAGEMENT -->
     <!-- ================================================= -->
 
-    <div class="section">
+    <div class="section-header">
+        <h2>
+            Medication Management
+        </h2>
 
-        <div class="section-header">
+        <button
+            class="secondary-button"
+            onclick="window.location.href='/history.html'"
+        >
+            View History
+        </button>
 
-            <h2>
-                Medication Management
-            </h2>
+        <button
+            class="secondary-button"
+            onclick="openPdfExport()"
+        >
+            Export Monthly PDF
+        </button>
 
-            <button
-                class="secondary-button"
-                onclick="openPdfExport()"
-            >
-                Export Monthly PDF
-            </button>
-
-            <button
-                class="primary-button"
-                onclick="openMedicationModal()"
-            >
-                + Add Medication
-            </button>
-
-        </div>
+        <button
+            class="primary-button"
+            onclick="openMedicationModal()"
+        >
+            + Add Medication
+        </button>
 
         </div>
 
