@@ -1646,7 +1646,7 @@ def administer_medication(
                 status = 'Administered',
                 given_by = ?,
                 witnessed_by = ?,
-                actual_time = GETDATE(),
+                actual_time = CONVERT(time, DATEADD(HOUR, 8, GETDATE())),
                 remarks = ?
             WHERE log_id = ?
         """,

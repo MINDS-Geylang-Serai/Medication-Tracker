@@ -1234,7 +1234,7 @@
 
                 if (med.status === "Administered") {
                     const actualTime = med.actual_time
-                        ? new Date(med.actual_time).toLocaleTimeString()
+                        ? med.actual_time.substring(0, 5)
                         : "-";
 
                     completedInfo = `
