@@ -1483,6 +1483,10 @@ def get_medications():
         connection = get_connection()
         cursor = connection.cursor()
 
+        singapore_now = datetime.now(
+            ZoneInfo("Asia/Singapore")
+        )
+
         # -------------------------------------------------
         # NEW:
         # Generate today's medication occurrences.
@@ -1531,11 +1535,13 @@ def get_medications():
             LEFT JOIN Staff witnessed_staff
                 ON ml.witnessed_by = witnessed_staff.staff_id
 
-            WHERE ml.administration_date = CAST(GETDATE() AS DATE)
+            WHERE ml.administration_date = ?
 
             ORDER BY
                 ml.scheduled_time ASC
-        """)
+        """,
+            today
+        )
 
         rows = cursor.fetchall()
 
