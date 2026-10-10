@@ -1335,8 +1335,9 @@ def ensure_today_medication_logs(
 
     today = singapore_now.date()
 
+    
     # -----------------------------------------------------
-    # Mark today's unfinished medications as
+    # Mark overdue Pending medication logs as
     # Not Administered after the 7:00 PM cutoff.
     # -----------------------------------------------------
 
@@ -1345,18 +1346,18 @@ def ensure_today_medication_logs(
     if singapore_now.time() >= cutoff_time:
 
         print(
-            "CUTOFF REACHED - marking today's Pending logs as Not Administered"
+            "CUTOFF REACHED - marking overdue Pending logs as Not Administered"
         )
 
         cursor.execute("""
             UPDATE MedicationLogs
             SET status = 'Not Administered'
-            WHERE administration_date = ?
+            WHERE administration_date <= ?
               AND status = 'Pending'
         """,
             today
         )
-        
+
         print(
             "ROWS UPDATED:",
             cursor.rowcount
