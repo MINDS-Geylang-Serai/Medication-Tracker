@@ -1287,30 +1287,66 @@ def update_medication(
         if connection:
             connection.close()
 
-
 # =========================================================
 # RECURRING MEDICATION SCHEDULING
 # =========================================================
 
-def medication_occurs_today(
+APP_TIMEZONE = ZoneInfo(
+    os.getenv("APP_TIMEZONE", "Asia/Singapore")
+)
+
+# Pending logs for today become Not Administered after this time.
+CUTOFF_TIME = time(19, 0)
+
+# Safety cap: never backfill more than this many days.
+MAX_BACKFILL_DAYS = 31
+
+
+def medication_occurs_on(
     frequency: str,
-    today: date
+    day: date
 ):
     """
-    Determines whether a medication should occur on a given date.
+    Returns True if a medication with this frequency
+    should occur on the given day.
 
-    Supported for now:
-        Daily
-        Weekdays
+    Daily = Monday to Friday only.
     """
 
-    if frequency == "Daily":
-        return today.weekday() < 5
+    normalised = (frequency or "").strip().lower()
 
-    if frequency == "Weekdays":
-        return today.weekday() < 5
+    if normalised in ("daily", "weekdays"):
+        return day.weekday() < 5
 
     return False
+
+
+def get_next_log_number(cursor):
+    """
+    Finds the highest existing L-number and returns the next one.
+    Called once per generation run, not once per insert.
+    """
+
+    cursor.execute("""
+        SELECT log_id
+        FROM MedicationLogs
+        WHERE log_id LIKE 'L%'
+    """)
+
+    highest_number = 0
+
+    for row in cursor.fetchall():
+
+        try:
+            number = int(row.log_id[1:])
+
+            if number > highest_number:
+                highest_number = number
+
+        except (ValueError, TypeError):
+            continue
+
+    return highest_number + 1
 
 
 def ensure_today_medication_logs(
@@ -1318,54 +1354,47 @@ def ensure_today_medication_logs(
     cursor
 ):
     """
-    Creates today's MedicationLog records for active
-    medications that are scheduled to occur today.
-
-    Existing logs are never duplicated.
+    1. For each active medication, creates Pending logs for every
+       weekday from the day after its last log (before today)
+       up to and including today. No duplicates.
+    2. Marks Pending logs from past days as Not Administered.
+    3. After the 7pm cutoff, marks today's Pending logs as
+       Not Administered.
     """
 
-    singapore_now = datetime.now(
-        ZoneInfo("Asia/Singapore")
+    now = datetime.now(APP_TIMEZONE)
+    today = now.date()
+    earliest_allowed = today - timedelta(days=MAX_BACKFILL_DAYS)
+
+    # -----------------------------------------------------
+    # 1. Each medication's last log date BEFORE today.
+    #    Today's logs are ignored so they can't hide a gap.
+    # -----------------------------------------------------
+
+    cursor.execute("""
+        SELECT
+            medication_id,
+            MAX(administration_date) AS last_date
+        FROM MedicationLogs
+        WHERE administration_date < ?
+        GROUP BY medication_id
+    """,
+        today
     )
-    
-    print(
-        "SINGAPORE NOW:",
-        singapore_now
-    )
 
-    today = singapore_now.date()
+    last_log_dates = {}
 
-    
-    # -----------------------------------------------------
-    # Mark overdue Pending medication logs as
-    # Not Administered after the 7:00 PM cutoff.
-    # -----------------------------------------------------
+    for row in cursor.fetchall():
 
-    cutoff_time = time(19, 0)
+        last_date = row.last_date
 
-    if singapore_now.time() >= cutoff_time:
+        if isinstance(last_date, datetime):
+            last_date = last_date.date()
 
-        print(
-            "CUTOFF REACHED - marking overdue Pending logs as Not Administered"
-        )
-
-        cursor.execute("""
-            UPDATE MedicationLogs
-            SET status = 'Not Administered'
-            WHERE administration_date <= ?
-              AND status = 'Pending'
-        """,
-            today
-        )
-
-        print(
-            "ROWS UPDATED:",
-            cursor.rowcount
-        )
+        last_log_dates[row.medication_id] = last_date
 
     # -----------------------------------------------------
-    # Find active medication schedules
-    # and only active trainees.
+    # 2. Active medications for active trainees.
     # -----------------------------------------------------
 
     cursor.execute("""
@@ -1383,91 +1412,116 @@ def ensure_today_medication_logs(
 
     medications = cursor.fetchall()
 
+    next_number = None
+    created_count = 0
+
     for medication in medications:
 
-        if not medication_occurs_today(
-            medication.frequency,
-            today
-        ):
-            continue
-
-        # -------------------------------------------------
-        # Check whether today's occurrence already exists.
-        # -------------------------------------------------
-
-        cursor.execute("""
-            SELECT log_id
-            FROM MedicationLogs
-            WHERE medication_id = ?
-              AND administration_date = ?
-              AND scheduled_time = ?
-        """,
-            medication.medication_id,
-            today,
-            medication.scheduled_time
-        )
-
-        existing_log = cursor.fetchone()
-
-        if existing_log:
-            continue
-
-        # -------------------------------------------------
-        # Generate a new log ID.
-        # -------------------------------------------------
-
-        cursor.execute("""
-            SELECT log_id
-            FROM MedicationLogs
-            WHERE log_id LIKE 'L%'
-        """)
-
-        existing_ids = cursor.fetchall()
-
-        highest_number = 0
-
-        for row in existing_ids:
-
-            try:
-                number = int(row.log_id[1:])
-
-                if number > highest_number:
-                    highest_number = number
-
-            except (ValueError, TypeError):
-                continue
-
-        new_log_id = f"L{highest_number + 1:03d}"
-
-        # -------------------------------------------------
-        # Create today's pending medication occurrence.
-        # -------------------------------------------------
-
-        cursor.execute("""
-            INSERT INTO MedicationLogs
-                (
-                    log_id,
-                    medication_id,
-                    trainee_id,
-                    administration_date,
-                    scheduled_time,
-                    status
-                )
-            SELECT
-                ?,
-                m.medication_id,
-                m.trainee_id,
-                ?,
-                m.scheduled_time,
-                'Pending'
-            FROM Medications m
-            WHERE m.medication_id = ?
-        """,
-            new_log_id,
-            today,
+        last_date = last_log_dates.get(
             medication.medication_id
         )
 
+        if last_date is None:
+            # New medication: start today, never invent past history.
+            start_date = today
+        else:
+            start_date = max(
+                last_date + timedelta(days=1),
+                earliest_allowed
+            )
+
+        day = start_date
+
+        while day <= today:
+
+            if medication_occurs_on(
+                medication.frequency,
+                day
+            ):
+
+                cursor.execute("""
+                    SELECT 1 AS found
+                    FROM MedicationLogs
+                    WHERE medication_id = ?
+                      AND administration_date = ?
+                      AND scheduled_time = ?
+                """,
+                    medication.medication_id,
+                    day,
+                    medication.scheduled_time
+                )
+
+                if not cursor.fetchone():
+
+                    if next_number is None:
+                        next_number = get_next_log_number(cursor)
+
+                    new_log_id = f"L{next_number:03d}"
+                    next_number += 1
+
+                    cursor.execute("""
+                        INSERT INTO MedicationLogs
+                            (
+                                log_id,
+                                medication_id,
+                                trainee_id,
+                                administration_date,
+                                scheduled_time,
+                                status
+                            )
+                        VALUES
+                            (?, ?, ?, ?, ?, 'Pending')
+                    """,
+                        new_log_id,
+                        medication.medication_id,
+                        medication.trainee_id,
+                        day,
+                        medication.scheduled_time
+                    )
+
+                    created_count += 1
+
+            day += timedelta(days=1)
+
+    # -----------------------------------------------------
+    # 3. Close overdue logs.
+    # -----------------------------------------------------
+
+    # Any past day: always Not Administered.
+    cursor.execute("""
+        UPDATE MedicationLogs
+        SET status = 'Not Administered'
+        WHERE status = 'Pending'
+          AND administration_date < ?
+    """,
+        today
+    )
+
+    past_closed = cursor.rowcount
+
+    # Today: only after the cutoff.
+    today_closed = 0
+
+    if now.time() >= CUTOFF_TIME:
+
+        cursor.execute("""
+            UPDATE MedicationLogs
+            SET status = 'Not Administered'
+            WHERE status = 'Pending'
+              AND administration_date = ?
+        """,
+            today
+        )
+
+        today_closed = cursor.rowcount
+
+    print(
+        f"[schedule] {now:%Y-%m-%d %H:%M} SGT | "
+        f"medications checked: {len(medications)} | "
+        f"logs created: {created_count} | "
+        f"past closed: {past_closed} | "
+        f"today closed: {today_closed}"
+    )
 
 # =========================================================
 # GET MEDICATION LOGS
@@ -1605,10 +1659,10 @@ def get_medications():
 # =========================================================
 # ADMINISTER MEDICATION
 # =========================================================
-
 @app.put("/medications/{log_id}/administer")
 def administer_medication(
     log_id: str,
+    given_by: str,
     witnessed_by: str,
     remarks: str = ""
 ):
@@ -1617,6 +1671,13 @@ def administer_medication(
     cursor = None
 
     try:
+
+        if given_by == witnessed_by:
+            raise HTTPException(
+                status_code=400,
+                detail="Given By and Witnessed By must be two different staff members."
+            )
+
         connection = get_connection()
         cursor = connection.cursor()
 
@@ -1638,8 +1699,22 @@ def administer_medication(
                 "error": "This medication has already been completed."
             }
 
-        # Prototype current Training Officer
-        given_by = "S002"
+        # Both staff must exist and be active.
+        cursor.execute("""
+            SELECT COUNT(*) AS valid_staff
+            FROM Staff
+            WHERE staff_id IN (?, ?)
+              AND active = 1
+        """,
+            given_by,
+            witnessed_by
+        )
+
+        if cursor.fetchone().valid_staff != 2:
+            raise HTTPException(
+                status_code=400,
+                detail="Given By and Witnessed By must both be active staff members."
+            )
 
         cursor.execute("""
             UPDATE MedicationLogs
@@ -1650,6 +1725,7 @@ def administer_medication(
                 actual_time = CONVERT(time, DATEADD(HOUR, 8, GETDATE())),
                 remarks = ?
             WHERE log_id = ?
+              AND status = 'Pending'
         """,
             given_by,
             witnessed_by,
@@ -1663,6 +1739,9 @@ def administer_medication(
             "message": "Medication administered successfully.",
             "log_id": log_id
         }
+
+    except HTTPException:
+        raise
 
     except Exception as error:
         print(
@@ -1687,7 +1766,6 @@ def administer_medication(
 
         if connection:
             connection.close()
-
 
 # =========================================================
 # CANCEL MEDICATION
@@ -1859,6 +1937,8 @@ def get_medication_history(
     try:
         connection = get_connection()
         cursor = connection.cursor()
+        ensure_today_medication_logs(connection, cursor)
+        connection.commit()
 
         cursor.execute("""
             SELECT
