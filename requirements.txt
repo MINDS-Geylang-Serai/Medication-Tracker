@@ -1,5 +1,4 @@
 fastapi
 uvicorn
-pyodbc
-azure-identity
 python-dotenv
+tzdata
