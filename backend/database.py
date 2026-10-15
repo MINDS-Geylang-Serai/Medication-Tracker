@@ -26,7 +26,7 @@ def get_connection():
         f"DATABASE={os.getenv('DB_NAME')};"
         "Encrypt=yes;"
         "TrustServerCertificate=no;"
-        "Connection Timeout=30;"
+        "Connection Timeout=60;"
     )
 
     return pyodbc.connect(

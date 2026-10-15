@@ -1662,8 +1662,9 @@ def get_medications():
 @app.put("/medications/{log_id}/administer")
 def administer_medication(
     log_id: str,
-    given_by: str,
+    request: Request,
     witnessed_by: str,
+    given_by: str | None = None,
     remarks: str = ""
 ):
 
@@ -1677,6 +1678,10 @@ def administer_medication(
                 status_code=400,
                 detail="Given By and Witnessed By must be two different staff members."
             )
+        
+        # If the frontend doesn't send Given By, use the signed-in staff member.
+        if not given_by:
+            given_by = get_current_staff(request)
 
         connection = get_connection()
         cursor = connection.cursor()
