@@ -1391,6 +1391,9 @@ def ensure_today_medication_logs(
         if isinstance(last_date, datetime):
             last_date = last_date.date()
 
+        if isinstance(last_date, str):
+            last_date = date.fromisoformat(last_date)
+
         last_log_dates[row.medication_id] = last_date
 
     # -----------------------------------------------------
@@ -1721,19 +1724,22 @@ def administer_medication(
                 detail="Given By and Witnessed By must both be active staff members."
             )
 
+        actual_time = datetime.now(APP_TIMEZONE).time().replace(microsecond=0)
+
         cursor.execute("""
             UPDATE MedicationLogs
             SET
                 status = 'Administered',
                 given_by = ?,
                 witnessed_by = ?,
-                actual_time = CONVERT(time, DATEADD(HOUR, 8, GETDATE())),
+                actual_time = ?,
                 remarks = ?
             WHERE log_id = ?
               AND status = 'Pending'
         """,
             given_by,
             witnessed_by,
+            actual_time,
             remarks,
             log_id
         )
