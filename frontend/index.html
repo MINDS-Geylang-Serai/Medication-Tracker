@@ -1605,7 +1605,13 @@
                 await fetch(
                     url,
                     {
-                        method: "PUT"
+                        method: "PUT",
+                        headers: {
+                            "X-Dev-Staff-ID":
+                                localStorage.getItem(
+                                    "staff_id"
+                                )
+                        }
                     }
                 );
 
